@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		1EF8C1CE3A899DC5EE79818B /* Pods_FinGo_PasscodeLock.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4132DAD7920F2230E67022BC /* Pods_FinGo_PasscodeLock.framework */; };
+		8535924B1D3C367E00E31D9F /* PasscodeLockConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D3DF451B91BD0E008561EB /* PasscodeLockConfiguration.swift */; };
+		8535924C1D3C368200E31D9F /* UserDefaultsPasscodeRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D3DF431B91B9CD008561EB /* UserDefaultsPasscodeRepository.swift */; };
 		857F57001D18E4CB009936D8 /* AWSCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 857F56FF1D18E4CB009936D8 /* AWSCore.framework */; };
 		85CD59281D3C0A3F00C50044 /* AWSConfirmationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85CD59271D3C0A3F00C50044 /* AWSConfirmationState.swift */; };
 		C99EAF431B90B05700D61E1B /* PasscodeLock.h in Headers */ = {isa = PBXBuildFile; fileRef = C99EAF421B90B05700D61E1B /* PasscodeLock.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -506,6 +508,8 @@
 					};
 					C99EAF481B90B05700D61E1B = {
 						CreatedOnToolsVersion = 7.0;
+						DevelopmentTeam = DTE53VW5CQ;
+						DevelopmentTeamName = "FrogHat LLC";
 					};
 					C9D3DF0F1B91AD11008561EB = {
 						CreatedOnToolsVersion = 7.0;
@@ -795,6 +799,7 @@
 				C9DC08051B90D394007A4DD0 /* ChangePasscodeState.swift in Sources */,
 				C9DC08021B90D2BA007A4DD0 /* ConfirmPasscodeState.swift in Sources */,
 				C9DC08121B90DE1B007A4DD0 /* PasscodeSignPlaceholderView.swift in Sources */,
+				8535924C1D3C368200E31D9F /* UserDefaultsPasscodeRepository.swift in Sources */,
 				C9DC07F21B90C9DE007A4DD0 /* EnterPasscodeState.swift in Sources */,
 				C9DC08141B90DE50007A4DD0 /* PasscodeSignButton.swift in Sources */,
 				C9D3DF481B91F099008561EB /* PasscodeLockPresenter.swift in Sources */,
@@ -804,6 +809,7 @@
 				C9DC07F81B90CF29007A4DD0 /* Functions.swift in Sources */,
 				85CD59281D3C0A3F00C50044 /* AWSConfirmationState.swift in Sources */,
 				C9DC07DB1B90B730007A4DD0 /* PasscodeLockConfigurationType.swift in Sources */,
+				8535924B1D3C367E00E31D9F /* PasscodeLockConfiguration.swift in Sources */,
 				C9DC07DE1B90BA06007A4DD0 /* PasscodeLockType.swift in Sources */,
 				C9DC07D51B90B1F6007A4DD0 /* PasscodeRepositoryType.swift in Sources */,
 			);
