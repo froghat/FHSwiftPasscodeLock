@@ -28,10 +28,14 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
         
         if passcode == passcodeToConfirm {
             
+            print("Passcode Confirm Succeeded.")
+            
             lock.repository.savePasscode(passcode: passcode)
             lock.delegate?.passcodeLockDidSucceed(lock: lock)
         
         } else {
+            
+            print("Passcode Confirm Failed.")
             
             let mismatchTitle = localizedStringFor(key: "PasscodeLockMismatchTitle", comment: "Passcode mismatch title")
             let mismatchDescription = localizedStringFor(key: "PasscodeLockMismatchDescription", comment: "Passcode mismatch description")
