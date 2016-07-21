@@ -6,6 +6,8 @@
 //  Copyright © 2015 Yanko Dimitrov. All rights reserved.
 //
 
+// testing
+
 import Foundation
 
 func localizedStringFor(key: String, comment: String) -> String {
