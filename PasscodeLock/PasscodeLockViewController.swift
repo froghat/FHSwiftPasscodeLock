@@ -196,12 +196,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
             
         } else if parent?.childViewControllers.contains(self) == true {
             
-            dismiss(animated: animateOnDismiss, completion: { [weak self] _ in
-                
-                self?.dismissCompletionCallback?()
-                
-                completionHandler?()
-            })
+            self.dismissCompletionCallback?()
             
             return
         }
@@ -281,10 +276,9 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     public func passcodeLockDidSucceed(lock: PasscodeLockType) {
         
         if lock.state is ConfirmPasscodeState {
-            //createAWSUser(userEmail: passedEmail!, userPassword: lock.repository.getPasscode())
-        }
-        else if lock.state is EnterPasscodeState {
-            //logInAWSUser(userEmail: passedEmail!, userPassword: lock.repository.getPasscode())
+            if self.parent is UIPageViewController {
+                
+            }
         }
         
         deleteSignButton?.isEnabled = true

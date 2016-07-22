@@ -29,18 +29,18 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
     
     func acceptPasscode(passcode: [String], fromLock lock: PasscodeLockType) {
         
-        if emailToSignUp != nil {
-            self.createAWSUser(userPassword: getPasscode(), passcode: passcode, lock: lock)
-        }
-        else {
-            if passcode == passcodeToConfirm {
-                
-                passcodeConfirmSucceeded(passcode: passcode, lock: lock)
+        if passcode == passcodeToConfirm {
             
-            } else {
-                
-                passcodeConfirmFailed(passcode: passcode, lock: lock)
+            if emailToSignUp != nil {
+                self.createAWSUser(userPassword: getPasscode(), passcode: passcode, lock: lock)
             }
+            else {
+                passcodeConfirmSucceeded(passcode: passcode, lock: lock)
+            }
+        
+        } else {
+            
+            passcodeConfirmFailed(passcode: passcode, lock: lock)
         }
     }
     
@@ -50,7 +50,13 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
         Pool().signUp(userEmail: emailToSignUp!, userPassword: userPassword).onSignUpFailure {task in
             
             DispatchQueue.main.async {
-                self.passcodeConfirmFailed(passcode: passcode, lock: lock)
+                
+                if task.error?.code == 17 {
+                    self.passcodeConfirmFailed(passcode: passcode, lock: lock, title: "Choose a different email.", description: "That email is already taken.")
+                }
+                else {
+                    self.passcodeConfirmFailed(passcode: passcode, lock: lock)
+                }
             }
             
         }.onSignUpSuccess {task in
@@ -67,6 +73,18 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
         
         lock.repository.savePasscode(passcode: passcode)
         lock.delegate?.passcodeLockDidSucceed(lock: lock)
+    }
+    
+    func passcodeConfirmFailed(passcode: [String], lock: PasscodeLockType, title: String, description: String) {
+        print("Passcode Confirm Failed.")
+        
+        let mismatchTitle = title
+        let mismatchDescription = description
+        
+        let nextState = SetPasscodeState(userEmail: emailToSignUp, title: mismatchTitle, description: mismatchDescription)
+        
+        lock.changeStateTo(state: nextState)
+        lock.delegate?.passcodeLockDidFail(lock: lock)
     }
     
     func passcodeConfirmFailed(passcode: [String], lock: PasscodeLockType) {
