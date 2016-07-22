@@ -37,7 +37,9 @@ public class PasscodeLockPresenter {
 
     public convenience init(mainWindow window: UIWindow?, configuration: PasscodeLockConfigurationType) {
         
-        let passcodeLockVC = PasscodeLockViewController(state: .EnterPasscode, configuration: configuration, email: nil)
+        let state = PasscodeLockViewController.LockState.EnterPasscode(email: nil)
+        
+        let passcodeLockVC = PasscodeLockViewController(state: state, configuration: configuration)
         
         self.init(mainWindow: window, configuration: configuration, viewController: passcodeLockVC)
     }
@@ -55,7 +57,9 @@ public class PasscodeLockPresenter {
         mainWindow?.windowLevel = 1
         mainWindow?.endEditing(true)
         
-        let passcodeLockVC = PasscodeLockViewController(state: .EnterPasscode, configuration: passcodeConfiguration, email: nil)
+        let state = PasscodeLockViewController.LockState.EnterPasscode(email: nil)
+        
+        let passcodeLockVC = PasscodeLockViewController(state: state, configuration: passcodeConfiguration)
         let userDismissCompletionCallback = passcodeLockVC.dismissCompletionCallback
         
         passcodeLockVC.dismissCompletionCallback = { [weak self] in

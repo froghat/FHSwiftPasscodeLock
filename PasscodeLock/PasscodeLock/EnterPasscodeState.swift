@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import AWSCognitoIdentityProvider
 
 public let PasscodeLockIncorrectPasscodeNotification = "passcode.lock.incorrect.passcode.notification"
 
@@ -17,8 +18,17 @@ struct EnterPasscodeState: PasscodeLockStateType {
     let isCancellableAction: Bool
     var isTouchIDAllowed = true
     
+    private var emailToLogIn: String?
     private var inccorectPasscodeAttempts = 0
     private var isNotificationSent = false
+    
+    init(userEmail: String?, allowCancellation: Bool = false) {
+        
+        emailToLogIn = userEmail
+        isCancellableAction = allowCancellation
+        title = localizedStringFor(key: "PasscodeLockEnterTitle", comment: "Enter passcode title")
+        description = localizedStringFor(key: "PasscodeLockEnterDescription", comment: "Enter passcode description")
+    }
     
     init(allowCancellation: Bool = false) {
         
@@ -33,20 +43,53 @@ struct EnterPasscodeState: PasscodeLockStateType {
             return
         }
         
-        if passcode == currentPasscode {
-            
-            lock.delegate?.passcodeLockDidSucceed(lock: lock)
-            
-        } else {
-            
-            inccorectPasscodeAttempts += 1
-            
-            if inccorectPasscodeAttempts >= lock.configuration.maximumInccorectPasscodeAttempts {
+        if emailToLogIn != nil {
+            logInAWSUser(userPassword: lock.repository.getPasscode(), lock: lock)
+        }
+        else {
+        
+            if passcode == currentPasscode {
                 
-                postNotification()
+                lock.delegate?.passcodeLockDidSucceed(lock: lock)
+                
+            }
+            else {
+                
+                inccorectPasscodeAttempts += 1
+                
+                if inccorectPasscodeAttempts >= lock.configuration.maximumInccorectPasscodeAttempts {
+                    
+                    postNotification()
+                }
+                
+                lock.delegate?.passcodeLockDidFail(lock: lock)
+            }
+        }
+    }
+    
+    func logInAWSUser(userPassword: String, lock: PasscodeLockType) {
+        
+        Pool().logIn(userEmail: emailToLogIn!, userPassword: userPassword).onLogInFailure {(task, user) in
+            
+            if task.error?.code == 11 {
+                self.jumpToConfirmationLock(user: user, lock: lock)
             }
             
-            lock.delegate?.passcodeLockDidFail(lock: lock)
+        }.onLogInSuccess {task in
+            
+            lock.delegate?.passcodeLockDidSucceed(lock: lock)
+                
+        }
+    }
+    
+    func jumpToConfirmationLock(user: AWSCognitoIdentityUser, lock: PasscodeLockType) {
+        print("Not Authenticated.")
+        
+        user.resendConfirmationCode()
+        
+        DispatchQueue.main.async {
+            
+            lock.changeStateTo(state: AWSConfirmationState(userEmail: self.emailToLogIn!))
         }
     }
     

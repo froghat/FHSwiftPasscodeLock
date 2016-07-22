@@ -15,8 +15,8 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     public var page = 0
     
     public enum LockState {
-        case EnterPasscode
-        case SetPasscode
+        case EnterPasscode(email: String?)
+        case SetPasscode(email: String?)
         case ChangePasscode
         case RemovePasscode
         case AWSConfirmation(email: String)
@@ -24,8 +24,8 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         func getState() -> PasscodeLockStateType {
             
             switch self {
-                case .EnterPasscode: return EnterPasscodeState()
-                case .SetPasscode: return SetPasscodeState()
+                case .EnterPasscode(let email): return EnterPasscodeState(userEmail: email)
+                case .SetPasscode(let email): return SetPasscodeState(userEmail: email)
                 case .ChangePasscode: return ChangePasscodeState()
                 case .RemovePasscode: return EnterPasscodeState(allowCancellation: true)
                 case .AWSConfirmation(let email): return AWSConfirmationState(userEmail: email)
@@ -55,11 +55,9 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     
     private var passwordAuthenticationCompletion: AWSTaskCompletionSource<AWSCognitoIdentityPasswordAuthenticationDetails>?
     
-    private var passedEmail: String?
-    
     // MARK: - Initializers
     
-    public init(state: PasscodeLockStateType, configuration: PasscodeLockConfigurationType, email: String?, animateOnDismiss: Bool = true) {
+    public init(state: PasscodeLockStateType, configuration: PasscodeLockConfigurationType, animateOnDismiss: Bool = true) {
         
         self.animateOnDismiss = animateOnDismiss
         
@@ -73,13 +71,11 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         
         passcodeLock.delegate = self
         notificationCenter = NotificationCenter.default
-        
-        self.passedEmail = email
     }
     
-    public convenience init(state: LockState, configuration: PasscodeLockConfigurationType, email: String?, animateOnDismiss: Bool = true) {
+    public convenience init(state: LockState, configuration: PasscodeLockConfigurationType, animateOnDismiss: Bool = true) {
         
-        self.init(state: state.getState(), configuration: configuration, email: email, animateOnDismiss: animateOnDismiss)
+        self.init(state: state.getState(), configuration: configuration, animateOnDismiss: animateOnDismiss)
     }
     
     public required init(coder aDecoder: NSCoder) {
@@ -215,72 +211,6 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         completionHandler?()
     }
     
-    func createAWSUser(userEmail: String, userPassword: String) {
-        // AWS Send Email
-        
-        //setup service config
-        if passedEmail != nil {
-            let serviceConfiguration = AWSServiceConfiguration(region: .usEast1, credentialsProvider: nil)
-            let userPoolConfiguration = AWSCognitoIdentityUserPoolConfiguration(clientId: "7r9126v4vlsopi2eovtvqumfc7", clientSecret: "1jfbad1tia2vuvt9v583p4a3h4tbi3u22v2hle06sg0p97682mbd", poolId: "us-east-1_y5cEV6M8J")
-            AWSCognitoIdentityUserPool.register(with: serviceConfiguration, userPoolConfiguration: userPoolConfiguration, forKey: "UserPool")
-            let pool = AWSCognitoIdentityUserPool(forKey: "UserPool")
-            _ = AWSCognitoCredentialsProvider(regionType: .usEast1, identityPoolId: "us-east-1_y5cEV6M8J", identityProviderManager:pool)
-            
-            let email = AWSCognitoIdentityUserAttributeType()
-            email?.name = "email"
-            email?.value = userEmail
-            
-            pool.signUp(email!.value!, password: userPassword, userAttributes: [email!], validationData: nil).continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
-                
-                if task.error != nil {
-                    print("Some Error")
-                    print(task.error!)
-                } else {
-                    print(task.result)
-                    
-                    print("Password: \(userPassword)")
-                }
-                return nil
-            })
-        }
-    }
-    
-    func logInAWSUser(userEmail: String, userPassword: String) {
-        if passedEmail != nil {
-            let serviceConfiguration = AWSServiceConfiguration(region: .usEast1, credentialsProvider: nil)
-            let userPoolConfiguration = AWSCognitoIdentityUserPoolConfiguration(clientId: "7r9126v4vlsopi2eovtvqumfc7", clientSecret: "1jfbad1tia2vuvt9v583p4a3h4tbi3u22v2hle06sg0p97682mbd", poolId: "us-east-1_y5cEV6M8J")
-            AWSCognitoIdentityUserPool.register(with: serviceConfiguration, userPoolConfiguration: userPoolConfiguration, forKey: "UserPool")
-            let pool = AWSCognitoIdentityUserPool(forKey: "UserPool")
-            _ = AWSCognitoCredentialsProvider(regionType: .usEast1, identityPoolId: "us-east-1_y5cEV6M8J", identityProviderManager:pool)
-            
-            let user = pool.getUser(userEmail)
-            
-            user.getSession(userEmail, password: userPassword, validationData: nil, scopes: nil).continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
-                
-                if task.error != nil {
-                    print(task.error!)
-                    
-                    print("Not Authenticated.")
-                    
-                    user.resendConfirmationCode()
-                    
-                    DispatchQueue.main.async {
-                        self.titleLabel?.text = "Account Not Confirmed"
-                        self.descriptionLabel?.text = "Enter the code found in your email to proceed"
-                        
-                        self.passcodeLock.changeStateTo(state: AWSConfirmationState(userEmail: userEmail))
-                    }
-                    
-                }
-                else {
-                    print(task.result)
-                }
-                
-                return nil
-            })
-        }
-    }
-    
     public func getDetails(_ authenticationInput: AWSCognitoIdentityPasswordAuthenticationInput, passwordAuthenticationCompletionSource: AWSTaskCompletionSource<AWSCognitoIdentityPasswordAuthenticationDetails>) {
         //keep a handle to the completion, you'll need it continue once you get the inputs from the end user
         self.passwordAuthenticationCompletion = passwordAuthenticationCompletionSource
@@ -351,12 +281,11 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     public func passcodeLockDidSucceed(lock: PasscodeLockType) {
         
         if lock.state is ConfirmPasscodeState {
-            createAWSUser(userEmail: passedEmail!, userPassword: lock.repository.getPasscode())
+            //createAWSUser(userEmail: passedEmail!, userPassword: lock.repository.getPasscode())
         }
         else if lock.state is EnterPasscodeState {
-            logInAWSUser(userEmail: passedEmail!, userPassword: lock.repository.getPasscode())
+            //logInAWSUser(userEmail: passedEmail!, userPassword: lock.repository.getPasscode())
         }
-        print("Lock State: \(lock.state)")
         
         deleteSignButton?.isEnabled = true
         animatePlaceholders(placeholders: placeholders, toState: .Inactive)
