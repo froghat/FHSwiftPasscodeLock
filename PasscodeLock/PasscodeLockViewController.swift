@@ -9,6 +9,7 @@
 import UIKit
 import AWSCore
 import AWSCognitoIdentityProvider
+import SCLAlertView
 
 public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDelegate, AWSCognitoIdentityPasswordAuthentication, AWSCognitoIdentityMultiFactorAuthentication {
     
@@ -17,7 +18,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     public enum LockState {
         case EnterPasscode(email: String?)
         case SetPasscode(email: String?)
-        case ChangePasscode
+        case ChangePasscode(email: String?)
         case RemovePasscode
         case AWSConfirmation(email: String)
         
@@ -26,7 +27,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
             switch self {
                 case .EnterPasscode(let email): return EnterPasscodeState(userEmail: email)
                 case .SetPasscode(let email): return SetPasscodeState(userEmail: email)
-                case .ChangePasscode: return ChangePasscodeState()
+                case .ChangePasscode(let email): return ChangePasscodeState(userEmail: email)
                 case .RemovePasscode: return EnterPasscodeState(allowCancellation: true)
                 case .AWSConfirmation(let email): return AWSConfirmationState(userEmail: email)
             }
@@ -288,9 +289,45 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         })
     }
     
-    public func passcodeLockDidFail(lock: PasscodeLockType) {
+    public func passcodeLockDidFail(lock: PasscodeLockType, failureType: FailureType) {
         
-        animateWrongPassword()
+        if failureType == .emailTaken {
+            let alert = SCLAlertView()
+            
+            if lock.state is ConfirmPasscodeState {
+                
+            }
+            
+            let txt = alert.addTextField("Enter a new email")
+            
+            _ = alert.addButton("Try Again With New Email") {
+                DispatchQueue.main.async {
+                    print("Changing state")
+                    let state = SetPasscodeState(userEmail: txt.text!)
+                    lock.changeStateTo(state: state)
+                }
+            }
+            
+            _ = alert.addButton("Request a Password Reset") {
+                DispatchQueue.main.async {
+                    print("Changing state")
+                    
+                    if let currentLock = lock.state as? SetPasscodeState {
+                        print("Changing passcode.")
+                        let state = ChangePasscodeState(userEmail: currentLock.getEmail())
+                        lock.changeStateTo(state: state)
+                    }
+                }
+            }
+            
+            _ = alert.showInfo("Email is Already Taken", subTitle: "Please input a new email or request a password reset.", closeButtonTitle: "Go Back", duration: 0)
+        }
+        else if failureType == .wrongCredentials {
+            
+        }
+        else {
+            animateWrongPassword()
+        }
     }
     
     public func passcodeLockDidChangeState(lock: PasscodeLockType) {

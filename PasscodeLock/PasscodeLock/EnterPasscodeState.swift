@@ -62,7 +62,7 @@ struct EnterPasscodeState: PasscodeLockStateType {
                     postNotification()
                 }
                 
-                lock.delegate?.passcodeLockDidFail(lock: lock)
+                lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown)
             }
         }
     }

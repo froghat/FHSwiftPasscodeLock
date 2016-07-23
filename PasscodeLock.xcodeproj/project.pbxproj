@@ -12,6 +12,7 @@
 		8535924B1D3C367E00E31D9F /* PasscodeLockConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D3DF451B91BD0E008561EB /* PasscodeLockConfiguration.swift */; };
 		8535924C1D3C368200E31D9F /* UserDefaultsPasscodeRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D3DF431B91B9CD008561EB /* UserDefaultsPasscodeRepository.swift */; };
 		857F57001D18E4CB009936D8 /* AWSCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 857F56FF1D18E4CB009936D8 /* AWSCore.framework */; };
+		857FD51D1D42DCB9004A240B /* Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857FD51C1D42DCB9004A240B /* Enums.swift */; };
 		85CD59281D3C0A3F00C50044 /* AWSConfirmationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85CD59271D3C0A3F00C50044 /* AWSConfirmationState.swift */; };
 		C99EAF431B90B05700D61E1B /* PasscodeLock.h in Headers */ = {isa = PBXBuildFile; fileRef = C99EAF421B90B05700D61E1B /* PasscodeLock.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C99EAF4A1B90B05800D61E1B /* PasscodeLock.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C99EAF3F1B90B05700D61E1B /* PasscodeLock.framework */; };
@@ -116,6 +117,7 @@
 		79629EF681CC23CFC8FF6293 /* Pods-Zeal-PasscodeLock.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Zeal-PasscodeLock.release.xcconfig"; path = "../Pods/Target Support Files/Pods-Zeal-PasscodeLock/Pods-Zeal-PasscodeLock.release.xcconfig"; sourceTree = "<group>"; };
 		8500E92E1D41866A00FF1983 /* Pool.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Pool.swift; path = PasscodeLock/Pool.swift; sourceTree = "<group>"; };
 		857F56FF1D18E4CB009936D8 /* AWSCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AWSCore.framework; path = "../../../../Library/Developer/Xcode/DerivedData/FinGo-bllrcvpgvpmcvmaquntarxhhcyse/Build/Products/Debug-iphoneos/AWSCore/AWSCore.framework"; sourceTree = "<group>"; };
+		857FD51C1D42DCB9004A240B /* Enums.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Enums.swift; sourceTree = "<group>"; };
 		85CD59271D3C0A3F00C50044 /* AWSConfirmationState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AWSConfirmationState.swift; sourceTree = "<group>"; };
 		96B4532260EA0D4B86D224EA /* Pods-FinGo-PasscodeLock.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FinGo-PasscodeLock.release.xcconfig"; path = "../Pods/Target Support Files/Pods-FinGo-PasscodeLock/Pods-FinGo-PasscodeLock.release.xcconfig"; sourceTree = "<group>"; };
 		A3C7B8F9A317B79B55DBFC2D /* Pods-PasscodeLock.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PasscodeLock.debug.xcconfig"; path = "../Pods/Target Support Files/Pods-PasscodeLock/Pods-PasscodeLock.debug.xcconfig"; sourceTree = "<group>"; };
@@ -278,6 +280,7 @@
 				C9DC07FA1B90D0A3007A4DD0 /* PasscodeLock.strings */,
 				C9DC08151B90DF4E007A4DD0 /* PasscodeLockViewController.swift */,
 				C9D3DF471B91F099008561EB /* PasscodeLockPresenter.swift */,
+				857FD51C1D42DCB9004A240B /* Enums.swift */,
 			);
 			path = PasscodeLock;
 			sourceTree = "<group>";
@@ -823,6 +826,7 @@
 				8500E92F1D41866A00FF1983 /* Pool.swift in Sources */,
 				C9DC07DE1B90BA06007A4DD0 /* PasscodeLockType.swift in Sources */,
 				C9DC07D51B90B1F6007A4DD0 /* PasscodeRepositoryType.swift in Sources */,
+				857FD51D1D42DCB9004A240B /* Enums.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -15,7 +15,11 @@ struct ChangePasscodeState: PasscodeLockStateType {
     let isCancellableAction = true
     var isTouchIDAllowed = false
     
-    init() {
+    private var email: String?
+    
+    init(userEmail: String?) {
+        
+        email = userEmail
         
         title = localizedStringFor(key: "PasscodeLockChangeTitle", comment: "Change passcode title")
         description = localizedStringFor(key: "PasscodeLockChangeDescription", comment: "Change passcode description")
@@ -29,13 +33,13 @@ struct ChangePasscodeState: PasscodeLockStateType {
         
         if passcode == currentPasscode {
             
-            let nextState = SetPasscodeState()
+            let nextState = SetPasscodeState(userEmail: email, fromChange: true)
             
             lock.changeStateTo(state: nextState)
             
         } else {
             
-            lock.delegate?.passcodeLockDidFail(lock: lock)
+            lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown)
         }
     }
 }

@@ -23,8 +23,8 @@
 "PasscodeLockChangeDescription" = "Enter your old passcode.";
 
 /* AWS Confirmation State */
-"PasscodeLockChangeTitle" = "Confirm Email";
-"PasscodeLockChangeDescription" = "Enter the confirmation code in your email.";
+"PasscodeLockConfirmationTitle" = "Confirm Email";
+"PasscodeLockConfirmationDescription" = "Enter the confirmation code in your email.";
 
 /* Passcode Mismatch State */
 "PasscodeLockMismatchTitle" = "Try again";

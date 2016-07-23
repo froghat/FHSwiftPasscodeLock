@@ -21,8 +21,8 @@ struct AWSConfirmationState: PasscodeLockStateType {
     init(userEmail: String) {
         
         email = userEmail
-        title = localizedStringFor(key: "PasscodeLockChangeTitle", comment: "Change passcode title")
-        description = localizedStringFor(key: "PasscodeLockChangeDescription", comment: "Change passcode description")
+        title = localizedStringFor(key: "PasscodeLockConfirmationTitle", comment: "Change passcode title")
+        description = localizedStringFor(key: "PasscodeLockConfirmationDescription", comment: "Change passcode description")
     }
     
     func acceptPasscode(passcode: [String], fromLock lock: PasscodeLockType) {
@@ -46,7 +46,7 @@ struct AWSConfirmationState: PasscodeLockStateType {
         Pool().confirm(userEmail: email, confirmationString: confirmationString).onConfirmationFailure {task in
             
             DispatchQueue.main.async {
-                lock.delegate?.passcodeLockDidFail(lock: lock)
+                lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown)
             }
             
         }.onConfirmationSuccess {task in

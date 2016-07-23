@@ -16,6 +16,7 @@ public class Pool {
     typealias signUpResponse = AWSTask<AWSCognitoIdentityUserPoolSignUpResponse>
     typealias logInResponse = AWSTask<AWSCognitoIdentityUserSession>
     typealias confirmationResponse = AWSTask<AWSCognitoIdentityUserConfirmSignUpResponse>
+    typealias changePasswordResponse = AWSTask<AWSCognitoIdentityUserChangePasswordResponse>
     
     // Type aliases, variables and functions handling sign ups.
     
@@ -97,6 +98,34 @@ public class Pool {
     
     func doConfirmationFailure(params: confirmationResponse) {
         if let closure = confirmationFailureClosure {
+            closure(params)
+        }
+    }
+    
+    // Type aliases, variables and functions handling password changes.
+    
+    typealias changePasswordClosure = (changePasswordResponse) -> Void
+    
+    var changePasswordSuccessClosure: ((changePasswordResponse) -> ())? = nil
+    var changePasswordFailureClosure: ((changePasswordResponse) -> ())? = nil
+    
+    func onChangePasswordSuccess(closure: (changePasswordResponse) -> ()) {
+        changePasswordSuccessClosure = closure
+    }
+    
+    func onChangePasswordFailure(closure: (changePasswordResponse) -> ()) -> Self {
+        changePasswordFailureClosure = closure
+        return self
+    }
+    
+    func doChangePasswordSuccess(params: changePasswordResponse) {
+        if let closure = changePasswordSuccessClosure {
+            closure(params)
+        }
+    }
+    
+    func doChangePasswordFailure(params: changePasswordResponse) {
+        if let closure = changePasswordFailureClosure {
             closure(params)
         }
     }
@@ -184,4 +213,27 @@ public class Pool {
         return self
     }
     
+    func changePassword(userEmail: String, currentPassword: String, proposedPassword: String) -> Self {
+        
+        let user = userPool().getUser(userEmail)
+        
+        user.changePassword(currentPassword, proposedPassword: proposedPassword).continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
+            
+            if task.error != nil {
+                print(task.error!)
+                
+                self.doChangePasswordFailure(params: task)
+                
+            }
+            else {
+                print(task.result)
+                
+                self.doChangePasswordSuccess(params: task)
+            }
+            
+            return nil
+        })
+        
+        return self
+    }
 }

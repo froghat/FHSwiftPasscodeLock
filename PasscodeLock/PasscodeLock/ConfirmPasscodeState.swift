@@ -15,14 +15,17 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
     let description: String
     let isCancellableAction = true
     var isTouchIDAllowed = false
+    let changingPasscode: Bool
     
-    private var emailToSignUp: String?
+    internal var awsEmail: String?
     private var passcodeToConfirm: [String]
     
-    init(userEmail: String?, passcode: [String]) {
+    init(userEmail: String?, passcode: [String], fromChange: Bool = false) {
         
-        emailToSignUp = userEmail
+        awsEmail = userEmail
         passcodeToConfirm = passcode
+        changingPasscode = fromChange
+        print("Changing Passcode = \(changingPasscode)")
         title = localizedStringFor(key: "PasscodeLockConfirmTitle", comment: "Confirm passcode title")
         description = localizedStringFor(key: "PasscodeLockConfirmDescription", comment: "Confirm passcode description")
     }
@@ -31,8 +34,13 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
         
         if passcode == passcodeToConfirm {
             
-            if emailToSignUp != nil {
-                self.createAWSUser(userPassword: getPasscode(), passcode: passcode, lock: lock)
+            if awsEmail != nil {
+                if changingPasscode == false {
+                    self.createAWSUser(userPassword: getPasscode(), passcode: passcode, lock: lock)
+                }
+                else {
+                    self.changeAWSPassword(currentPassword: lock.repository.getPasscode(), proposedPassword: getPasscode(), passcode: passcode, lock: lock)
+                }
             }
             else {
                 passcodeConfirmSucceeded(passcode: passcode, lock: lock)
@@ -40,22 +48,22 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
         
         } else {
             
-            passcodeConfirmFailed(passcode: passcode, lock: lock)
+            passcodeConfirmFailed(passcode: passcode, lock: lock, failureType: .incorrectPasscode)
         }
     }
     
     func createAWSUser(userPassword: String, passcode: [String], lock: PasscodeLockType) {
         // AWS Send Email
         
-        Pool().signUp(userEmail: emailToSignUp!, userPassword: userPassword).onSignUpFailure {task in
+        Pool().signUp(userEmail: awsEmail!, userPassword: userPassword).onSignUpFailure {task in
             
             DispatchQueue.main.async {
                 
                 if task.error?.code == 17 {
-                    self.passcodeConfirmFailed(passcode: passcode, lock: lock, title: "Choose a different email.", description: "That email is already taken.")
+                    self.passcodeConfirmFailed(passcode: passcode, lock: lock, failureType: .emailTaken, title: "Choose a different email.", description: "That email is already taken.")
                 }
                 else {
-                    self.passcodeConfirmFailed(passcode: passcode, lock: lock)
+                    self.passcodeConfirmFailed(passcode: passcode, lock: lock, failureType: .unknown)
                 }
             }
             
@@ -68,6 +76,23 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
         }
     }
     
+    func changeAWSPassword(currentPassword: String, proposedPassword: String, passcode: [String], lock: PasscodeLockType) {
+        print("Changing password for user \(awsEmail!) with current password \(currentPassword) and proposed password \(proposedPassword).")
+        Pool().changePassword(userEmail: awsEmail!, currentPassword: currentPassword, proposedPassword: proposedPassword).onChangePasswordFailure {task in
+            if task.error?.code == 11 {
+                self.passcodeConfirmFailed(passcode: passcode, lock: lock, failureType: .notConfirmed)
+            } else {
+                self.passcodeConfirmFailed(passcode: passcode, lock: lock, failureType: .unknown)
+            }
+            
+        }.onChangePasswordSuccess {task in
+            DispatchQueue.main.async {
+                self.passcodeConfirmSucceeded(passcode: passcode, lock: lock)
+            }
+        }
+        
+    }
+    
     func passcodeConfirmSucceeded(passcode: [String], lock: PasscodeLockType) {
         print("Passcode Confirm Succeeded.")
         
@@ -75,28 +100,34 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
         lock.delegate?.passcodeLockDidSucceed(lock: lock)
     }
     
-    func passcodeConfirmFailed(passcode: [String], lock: PasscodeLockType, title: String, description: String) {
+    func passcodeConfirmFailed(passcode: [String], lock: PasscodeLockType, failureType: FailureType, title: String, description: String) {
         print("Passcode Confirm Failed.")
         
         let mismatchTitle = title
         let mismatchDescription = description
         
-        let nextState = SetPasscodeState(userEmail: emailToSignUp, title: mismatchTitle, description: mismatchDescription)
+        let nextState = SetPasscodeState(userEmail: awsEmail, title: mismatchTitle, description: mismatchDescription)
         
         lock.changeStateTo(state: nextState)
-        lock.delegate?.passcodeLockDidFail(lock: lock)
+        lock.delegate?.passcodeLockDidFail(lock: lock, failureType: failureType)
     }
     
-    func passcodeConfirmFailed(passcode: [String], lock: PasscodeLockType) {
+    func passcodeConfirmFailed(passcode: [String], lock: PasscodeLockType, failureType: FailureType) {
         print("Passcode Confirm Failed.")
         
         let mismatchTitle = localizedStringFor(key: "PasscodeLockMismatchTitle", comment: "Passcode mismatch title")
         let mismatchDescription = localizedStringFor(key: "PasscodeLockMismatchDescription", comment: "Passcode mismatch description")
-        
-        let nextState = SetPasscodeState(userEmail: emailToSignUp, title: mismatchTitle, description: mismatchDescription)
+        		
+        let nextState = SetPasscodeState(userEmail: awsEmail, title: mismatchTitle, description: mismatchDescription)
         
         lock.changeStateTo(state: nextState)
-        lock.delegate?.passcodeLockDidFail(lock: lock)
+        lock.delegate?.passcodeLockDidFail(lock: lock, failureType: failureType)
+    }
+    
+    // Needed to pull the email for AWS.
+    func getEmail() -> String? {
+        
+        return awsEmail
     }
     
     // Needed to pull the passcode for AWS.
