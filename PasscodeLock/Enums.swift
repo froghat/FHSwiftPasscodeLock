@@ -8,16 +8,14 @@
 
 import Foundation
 
-public enum FailureType: Int, CustomStringConvertible {
-    case unknown = 0, emailTaken, notConfirmed, wrongCredentials, incorrectPasscode
+public enum ActionAfterConfirmation: Int, CustomStringConvertible {
+    case unknown = 0, resetPassword, logIn
     
     var TypeName: String {
         let typeNames = [
             "Unknown",
-            "Email Taken",
-            "User uncomfirmed",
-            "Wrong Credentials",
-            "Incorrect Passcode"]
+            "Reset Password",
+            "Log In"]
         return typeNames[rawValue]
     }
     
@@ -26,7 +24,7 @@ public enum FailureType: Int, CustomStringConvertible {
     }
 }
 
-public func ==(lhs: FailureType, rhs: FailureType) -> Bool {
+public func ==(lhs: ActionAfterConfirmation, rhs: ActionAfterConfirmation) -> Bool {
     return lhs.rawValue == rhs.rawValue
 }
 
@@ -47,5 +45,27 @@ public enum AWSCodeType: Int, CustomStringConvertible {
 }
 
 public func ==(lhs: AWSCodeType, rhs: AWSCodeType) -> Bool {
+    return lhs.rawValue == rhs.rawValue
+}
+
+public enum FailureType: Int, CustomStringConvertible {
+    case unknown = 0, emailTaken, notConfirmed, wrongCredentials, incorrectPasscode
+    
+    var TypeName: String {
+        let typeNames = [
+            "Unknown",
+            "Email Taken",
+            "User uncomfirmed",
+            "Wrong Credentials",
+            "Incorrect Passcode"]
+        return typeNames[rawValue]
+    }
+    
+    public var description: String {
+        return TypeName
+    }
+}
+
+public func ==(lhs: FailureType, rhs: FailureType) -> Bool {
     return lhs.rawValue == rhs.rawValue
 }

@@ -17,10 +17,12 @@ struct AWSCodeState: PasscodeLockStateType {
     var isTouchIDAllowed = false
     
     private var codeNeeded: AWSCodeType
+    private var nextAction: ActionAfterConfirmation
     
-    init(codeType: AWSCodeType) {
+    init(codeType: AWSCodeType, priorAction: ActionAfterConfirmation = .unknown) {
         
         codeNeeded = codeType
+        nextAction = priorAction
         
         title = localizedStringFor(key: "PasscodeLockConfirmationTitle", comment: "Change passcode title")
         description = localizedStringFor(key: "PasscodeLockConfirmationDescription", comment: "Change passcode description")
@@ -52,18 +54,36 @@ struct AWSCodeState: PasscodeLockStateType {
     
     func confirmAWSUser(confirmationString: String, lock: PasscodeLockType) {
         
+        Pool.sharedInstance.user?.resendConfirmationCode()
+        
         Pool.sharedInstance.confirm(confirmationString: confirmationString).onConfirmationFailure {task in
             
             DispatchQueue.main.async {
-                lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown)
+                lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
             }
             
         }.onConfirmationSuccess {task in
             
             DispatchQueue.main.async {
-                let nextState = EnterPasscodeState()
+                print("nextAction == \(self.nextAction)")
+                
+                if self.nextAction == .resetPassword {
+                    Pool.sharedInstance.forgotPassword().onForgottenPasswordFailure {task in
+                        
+                    }.onForgottenPasswordSuccess {task in
+                        let nextState = AWSCodeState(codeType: .forgottenPassword)
+                        
+                        lock.changeStateTo(state: nextState)
+                    }
+                }
+                else if self.nextAction == .logIn {
+                    let nextState = EnterPasscodeState()
 
-                lock.changeStateTo(state: nextState)
+                    lock.changeStateTo(state: nextState)
+                }
+                else {
+                    lock.delegate?.passcodeLockDidSucceed(lock: lock)
+                }
             }
             
         }
@@ -74,13 +94,13 @@ struct AWSCodeState: PasscodeLockStateType {
         Pool.sharedInstance.confirmForgotPassword(confirmationString: confirmationString, passcode: passcode).onForgottenPasswordConfirmationFailure {task in
             
             DispatchQueue.main.async {
-                lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown)
+                lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: self.nextAction)
             }
             
         }.onForgottenPasswordConfirmationSuccess {task in
                 
             DispatchQueue.main.async {
-                let nextState = ChangePasscodeState()
+                let nextState = SetPasscodeState(fromChange: true)
                     
                 lock.changeStateTo(state: nextState)
             }

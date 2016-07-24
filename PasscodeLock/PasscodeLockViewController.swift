@@ -11,6 +11,40 @@ import AWSCore
 import AWSCognitoIdentityProvider
 import SCLAlertView
 
+extension String {
+    
+    //To check text field or String is blank or not
+    var isBlank: Bool {
+        get {
+            let trimmed = trimmingCharacters(in: NSCharacterSet.whitespaces)
+            return trimmed.isEmpty
+        }
+    }
+    
+    //Validate Email
+    var isEmail: Bool {
+        // print("validate calendar: \(testStr)")
+        let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
+        
+        let emailTest = Predicate(format:"SELF MATCHES %@", emailRegEx)
+        return emailTest.evaluate(with: self)
+    }
+    
+    //validate PhoneNumber
+    var isPhoneNumber: Bool {
+        
+        let charcter = NSCharacterSet(charactersIn: "+0123456789").inverted
+        
+        var filtered:NSString!
+        
+        let inputString: NSArray = self.components(separatedBy: charcter)
+        
+        filtered = inputString.componentsJoined(by: "")
+        return  self == filtered
+        
+    }
+}
+
 public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDelegate, AWSCognitoIdentityInteractiveAuthenticationDelegate, AWSCognitoIdentityPasswordAuthentication, AWSCognitoIdentityMultiFactorAuthentication {
     
     public var page = 0
@@ -279,7 +313,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         })
     }
     
-    public func passcodeLockDidFail(lock: PasscodeLockType, failureType: FailureType) {
+    public func passcodeLockDidFail(lock: PasscodeLockType, failureType: FailureType, priorAction: ActionAfterConfirmation = .unknown) {
         
         if failureType == .emailTaken {
             
@@ -287,7 +321,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
             
         }
         else if failureType == .notConfirmed {
-            notConfirmedAlert(lock: lock)
+            notConfirmedAlert(lock: lock, priorAction: priorAction)
         }
         else if failureType == .wrongCredentials {
             
@@ -326,11 +360,19 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         let alert = SCLAlertView()
         
         let txt = alert.addTextField("Enter a new email")
+        txt.autocapitalizationType = .none
+        txt.tag = 0
+        txt.delegate = self
         
-        _ = alert.addButton("Try Again With New Email") {
-            print("Changing state")
-            self.switchToSetPasscodeState(lock: lock, email: txt.text!)
+        let newEmailButton = alert.addButton("Try Again With New Email") {
+            Pool.sharedInstance.setEmail(email: txt.text!)
+            self.switchToSetPasscodeState(lock: lock)
         }
+        
+        newEmailButton.tag = 1
+        
+        newEmailButton.isEnabled = false
+        newEmailButton.alpha = 0.5
         
         _ = alert.addButton("Forgot Password") {
             print("Attempting to change a forgotten passcode.")
@@ -339,25 +381,25 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
                 
                 if task.error?.code == 7 {
                     print("User must be confirmed to claim a forgotten password. Sort of ridiculous, but whatever.")
-                    self.passcodeLockDidFail(lock: lock, failureType: .notConfirmed)
+                    self.passcodeLockDidFail(lock: lock, failureType: .notConfirmed, priorAction: .resetPassword)
                 }
                 else {
                     self.passcodeLockDidFail(lock: lock, failureType: .unknown)
                 }
                 
             }.onForgottenPasswordSuccess {task in
-                self.switchToAWSCodeState(lock: lock, codeType: .forgottenPassword)
+                self.switchToAWSCodeState(lock: lock, codeType: .forgottenPassword, priorAction: .unknown)
             }
         }
         
         _ = alert.showInfo("Email is Already Taken", subTitle: "Please input a new email or request a password reset.", closeButtonTitle: "Go Back", duration: 0)
     }
     
-    func notConfirmedAlert(lock: PasscodeLockType) {
+    func notConfirmedAlert(lock: PasscodeLockType, priorAction: ActionAfterConfirmation) {
         let alert = SCLAlertView()
         
         _ = alert.addButton("Confirm Email") {
-            self.switchToAWSCodeState(lock: lock, codeType: .confirmation)
+            self.switchToAWSCodeState(lock: lock, codeType: .confirmation, priorAction: priorAction)
         }
         
         _ = alert.showNotice("Email Uncomfirmed", subTitle: "Please continue to email confirmation before attempting that task again.", closeButtonTitle: "Go Back", duration: 0)
@@ -365,9 +407,9 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     
     // MARK: - State Changing Methods
     
-    func switchToAWSCodeState(lock: PasscodeLockType, codeType: AWSCodeType) {
+    func switchToAWSCodeState(lock: PasscodeLockType, codeType: AWSCodeType, priorAction: ActionAfterConfirmation) {
         DispatchQueue.main.async {
-            let nextState = AWSCodeState(codeType: codeType)
+            let nextState = AWSCodeState(codeType: codeType, priorAction: priorAction)
             lock.changeStateTo(state: nextState)
         }
     }
@@ -379,16 +421,10 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         }
     }
     
-    func switchToSetPasscodeState(lock: PasscodeLockType, email: String? = nil) {
+    func switchToSetPasscodeState(lock: PasscodeLockType) {
         DispatchQueue.main.async {
-            if email == nil {
-                let nextState = SetPasscodeState()
-                lock.changeStateTo(state: nextState)
-            }
-            else {
-                let nextState = SetPasscodeState()
-                lock.changeStateTo(state: nextState)
-            }
+            let nextState = SetPasscodeState()
+            lock.changeStateTo(state: nextState)
         }
     }
     
@@ -408,5 +444,68 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     
     public func didCompleteMultifactorAuthenticationStepWithError(_ error: NSError) {
         
+    }
+    
+    // Hate to add this, but I need to figure out how to only call a callback when trying to log in.
+    public func isLoggingIn() -> Bool {
+        if self.passcodeLock.state is EnterPasscodeState {
+            return true
+        }
+        else {
+            return false
+        }
+    }
+}
+
+// We need this extension to manipulate buttons and text fields in alert views.
+
+extension PasscodeLockViewController: UITextFieldDelegate {
+    public func textFieldDidBeginEditing(_ textField: UITextField) {
+        print("TextField did begin editing method called")
+    }
+    
+    public func textFieldDidEndEditing(_ textField: UITextField) {
+        print("TextField did end editing method called")
+    }
+    
+    public func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
+        print("TextField should begin editing method called")
+        return true
+    }
+    
+    public func textFieldShouldClear(_ textField: UITextField) -> Bool {
+        print("TextField should clear method called")
+        return true
+    }
+    
+    public func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
+        print("TextField should snd editing method called")
+        return true
+    }
+    
+    public func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        print("While entering the characters this method gets called")
+        
+        if textField.tag == 0 {
+            if textField.text!.isEmail == true {
+                if let button = textField.superview?.viewWithTag(1) as? UIButton {
+                    button.isEnabled = true
+                    button.alpha = 1
+                }
+            }
+            else {
+                if let button = textField.superview?.viewWithTag(1) as? UIButton {
+                    button.isEnabled = false
+                    button.alpha = 0.5
+                }
+            }
+        }
+        return true
+    }
+    
+    public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        print("TextField should return method called")
+        textField.resignFirstResponder();
+        return true
     }
 }

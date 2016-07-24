@@ -53,7 +53,7 @@ struct EnterPasscodeState: PasscodeLockStateType {
                     postNotification()
                 }
                 
-                lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown)
+                lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
             }
         }
     }
@@ -75,8 +75,6 @@ struct EnterPasscodeState: PasscodeLockStateType {
     
     func jumpToConfirmationLock(user: AWSCognitoIdentityUser, lock: PasscodeLockType) {
         print("Not Authenticated.")
-        
-        user.resendConfirmationCode()
         
         DispatchQueue.main.async {
             

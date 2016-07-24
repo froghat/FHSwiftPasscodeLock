@@ -89,6 +89,12 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
         }.onChangePasswordSuccess {task in
             DispatchQueue.main.async {
                 self.passcodeConfirmSucceeded(passcode: passcode, lock: lock)
+                
+                Pool.sharedInstance.logIn(userPassword: proposedPassword).onLogInFailure {task in
+                    
+                }.onLogInSuccess {task in
+                        
+                }
             }
         }
         
@@ -110,7 +116,7 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
         let nextState = SetPasscodeState(title: mismatchTitle, description: mismatchDescription)
         
         lock.changeStateTo(state: nextState)
-        lock.delegate?.passcodeLockDidFail(lock: lock, failureType: failureType)
+        lock.delegate?.passcodeLockDidFail(lock: lock, failureType: failureType, priorAction: .unknown)
     }
     
     func passcodeConfirmFailed(passcode: [String], lock: PasscodeLockType, failureType: FailureType) {
@@ -122,7 +128,7 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
         let nextState = SetPasscodeState(title: mismatchTitle, description: mismatchDescription)
         
         lock.changeStateTo(state: nextState)
-        lock.delegate?.passcodeLockDidFail(lock: lock, failureType: failureType)
+        lock.delegate?.passcodeLockDidFail(lock: lock, failureType: failureType, priorAction: .unknown)
     }
     
     // Needed to pull the passcode for AWS.

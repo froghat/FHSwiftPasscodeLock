@@ -35,7 +35,7 @@ struct ChangePasscodeState: PasscodeLockStateType {
             
         } else {
             
-            lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown)
+            lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
         }
     }
 }
