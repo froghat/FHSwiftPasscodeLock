@@ -42,4 +42,10 @@ struct ChangePasscodeState: PasscodeLockStateType {
             lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown)
         }
     }
+    
+    // Needed to pull the email for AWS.
+    func getEmail() -> String? {
+        
+        return email
+    }
 }

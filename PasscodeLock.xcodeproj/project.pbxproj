@@ -13,7 +13,7 @@
 		8535924C1D3C368200E31D9F /* UserDefaultsPasscodeRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D3DF431B91B9CD008561EB /* UserDefaultsPasscodeRepository.swift */; };
 		857F57001D18E4CB009936D8 /* AWSCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 857F56FF1D18E4CB009936D8 /* AWSCore.framework */; };
 		857FD51D1D42DCB9004A240B /* Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857FD51C1D42DCB9004A240B /* Enums.swift */; };
-		85CD59281D3C0A3F00C50044 /* AWSConfirmationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85CD59271D3C0A3F00C50044 /* AWSConfirmationState.swift */; };
+		85CD59281D3C0A3F00C50044 /* AWSCodeState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85CD59271D3C0A3F00C50044 /* AWSCodeState.swift */; };
 		C99EAF431B90B05700D61E1B /* PasscodeLock.h in Headers */ = {isa = PBXBuildFile; fileRef = C99EAF421B90B05700D61E1B /* PasscodeLock.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C99EAF4A1B90B05800D61E1B /* PasscodeLock.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C99EAF3F1B90B05700D61E1B /* PasscodeLock.framework */; };
 		C9D3DF0B1B919CE4008561EB /* PasscodeLockView.xib in Resources */ = {isa = PBXBuildFile; fileRef = C9D3DF0A1B919CE4008561EB /* PasscodeLockView.xib */; };
@@ -118,7 +118,7 @@
 		8500E92E1D41866A00FF1983 /* Pool.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Pool.swift; path = PasscodeLock/Pool.swift; sourceTree = "<group>"; };
 		857F56FF1D18E4CB009936D8 /* AWSCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AWSCore.framework; path = "../../../../Library/Developer/Xcode/DerivedData/FinGo-bllrcvpgvpmcvmaquntarxhhcyse/Build/Products/Debug-iphoneos/AWSCore/AWSCore.framework"; sourceTree = "<group>"; };
 		857FD51C1D42DCB9004A240B /* Enums.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Enums.swift; sourceTree = "<group>"; };
-		85CD59271D3C0A3F00C50044 /* AWSConfirmationState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AWSConfirmationState.swift; sourceTree = "<group>"; };
+		85CD59271D3C0A3F00C50044 /* AWSCodeState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AWSCodeState.swift; sourceTree = "<group>"; };
 		96B4532260EA0D4B86D224EA /* Pods-FinGo-PasscodeLock.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FinGo-PasscodeLock.release.xcconfig"; path = "../Pods/Target Support Files/Pods-FinGo-PasscodeLock/Pods-FinGo-PasscodeLock.release.xcconfig"; sourceTree = "<group>"; };
 		A3C7B8F9A317B79B55DBFC2D /* Pods-PasscodeLock.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PasscodeLock.debug.xcconfig"; path = "../Pods/Target Support Files/Pods-PasscodeLock/Pods-PasscodeLock.debug.xcconfig"; sourceTree = "<group>"; };
 		A970980FC994ECB35DDEBCF4 /* Pods_PasscodeLock.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_PasscodeLock.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -335,7 +335,7 @@
 				C9DC07FE1B90D24A007A4DD0 /* SetPasscodeState.swift */,
 				C9DC08011B90D2BA007A4DD0 /* ConfirmPasscodeState.swift */,
 				C9DC08041B90D394007A4DD0 /* ChangePasscodeState.swift */,
-				85CD59271D3C0A3F00C50044 /* AWSConfirmationState.swift */,
+				85CD59271D3C0A3F00C50044 /* AWSCodeState.swift */,
 			);
 			path = PasscodeLock;
 			sourceTree = "<group>";
@@ -820,7 +820,7 @@
 				C9DC08161B90DF4E007A4DD0 /* PasscodeLockViewController.swift in Sources */,
 				C9DC07E11B90BBFD007A4DD0 /* PasscodeLock.swift in Sources */,
 				C9DC07F81B90CF29007A4DD0 /* Functions.swift in Sources */,
-				85CD59281D3C0A3F00C50044 /* AWSConfirmationState.swift in Sources */,
+				85CD59281D3C0A3F00C50044 /* AWSCodeState.swift in Sources */,
 				C9DC07DB1B90B730007A4DD0 /* PasscodeLockConfigurationType.swift in Sources */,
 				8535924B1D3C367E00E31D9F /* PasscodeLockConfiguration.swift in Sources */,
 				8500E92F1D41866A00FF1983 /* Pool.swift in Sources */,

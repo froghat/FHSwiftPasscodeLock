@@ -80,9 +80,13 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
         print("Changing password for user \(awsEmail!) with current password \(currentPassword) and proposed password \(proposedPassword).")
         Pool().changePassword(userEmail: awsEmail!, currentPassword: currentPassword, proposedPassword: proposedPassword).onChangePasswordFailure {task in
             if task.error?.code == 11 {
+                
                 self.passcodeConfirmFailed(passcode: passcode, lock: lock, failureType: .notConfirmed)
+                
             } else {
+                print(task.error?.code)
                 self.passcodeConfirmFailed(passcode: passcode, lock: lock, failureType: .unknown)
+                
             }
             
         }.onChangePasswordSuccess {task in

@@ -11,36 +11,42 @@ import AWSCognitoIdentityProvider
 
 public class Pool {
     
+    // Make class usable as a singleton This is so we can set a delegate for the user pool and maintain it.
+    
+    static let sharedInstance = Pool()
+    
     // Type aliases for AWSCognitoIdentyProvider Tasks.
     
-    typealias signUpResponse = AWSTask<AWSCognitoIdentityUserPoolSignUpResponse>
-    typealias logInResponse = AWSTask<AWSCognitoIdentityUserSession>
-    typealias confirmationResponse = AWSTask<AWSCognitoIdentityUserConfirmSignUpResponse>
-    typealias changePasswordResponse = AWSTask<AWSCognitoIdentityUserChangePasswordResponse>
+    typealias SignUpResponse = AWSTask<AWSCognitoIdentityUserPoolSignUpResponse>
+    typealias LogInResponse = AWSTask<AWSCognitoIdentityUserSession>
+    typealias ConfirmationResponse = AWSTask<AWSCognitoIdentityUserConfirmSignUpResponse>
+    typealias ChangePasswordResponse = AWSTask<AWSCognitoIdentityUserChangePasswordResponse>
+    typealias ForgottenPasswordResponse = AWSTask<AWSCognitoIdentityUserForgotPasswordResponse>
+    typealias ForgottenPasswordConfirmationResponse = AWSTask<AWSCognitoIdentityUserConfirmForgotPasswordResponse>
     
     // Type aliases, variables and functions handling sign ups.
     
-    typealias signUpClosure = (signUpResponse) -> Void
+    typealias SignUpClosure = (SignUpResponse) -> Void
     
-    var signUpSuccessClosure: ((signUpResponse) -> ())? = nil
-    var signUpFailureClosure: ((signUpResponse) -> ())? = nil
+    var signUpSuccessClosure: ((SignUpResponse) -> ())? = nil
+    var signUpFailureClosure: ((SignUpResponse) -> ())? = nil
     
-    func onSignUpSuccess(closure: (signUpResponse) -> ()) {
+    func onSignUpSuccess(closure: (SignUpResponse) -> ()) {
         signUpSuccessClosure = closure
     }
     
-    func onSignUpFailure(closure: (signUpResponse) -> ()) -> Self {
+    func onSignUpFailure(closure: (SignUpResponse) -> ()) -> Self {
         signUpFailureClosure = closure
         return self
     }
     
-    func doSignUpSuccess(params: signUpResponse) {
+    func doSignUpSuccess(params: SignUpResponse) {
         if let closure = signUpSuccessClosure {
             closure(params)
         }
     }
     
-    func doSignUpFailure(params: signUpResponse) {
+    func doSignUpFailure(params: SignUpResponse) {
         if let closure = signUpFailureClosure {
             closure(params)
         }
@@ -48,27 +54,27 @@ public class Pool {
     
     // Type aliases, variables and functions handling log ins.
     
-    typealias logInClosure = (logInResponse) -> Void
+    typealias LogInClosure = (LogInResponse) -> Void
     
-    var logInSuccessClosure: ((logInResponse) -> ())? = nil
-    var logInFailureClosure: ((logInResponse, AWSCognitoIdentityUser) -> ())? = nil
+    var logInSuccessClosure: ((LogInResponse) -> ())? = nil
+    var logInFailureClosure: ((LogInResponse, AWSCognitoIdentityUser) -> ())? = nil
     
-    func onLogInSuccess(closure: (logInResponse) -> ()) {
+    func onLogInSuccess(closure: (LogInResponse) -> ()) {
         logInSuccessClosure = closure
     }
     
-    func onLogInFailure(closure: (logInResponse, AWSCognitoIdentityUser) -> ()) -> Self {
+    func onLogInFailure(closure: (LogInResponse, AWSCognitoIdentityUser) -> ()) -> Self {
         logInFailureClosure = closure
         return self
     }
     
-    func doLogInSuccess(params: logInResponse) {
+    func doLogInSuccess(params: LogInResponse) {
         if let closure = logInSuccessClosure {
             closure(params)
         }
     }
     
-    func doLogInFailure(param1: logInResponse, param2: AWSCognitoIdentityUser) {
+    func doLogInFailure(param1: LogInResponse, param2: AWSCognitoIdentityUser) {
         if let closure = logInFailureClosure {
             closure(param1, param2)
         }
@@ -76,27 +82,27 @@ public class Pool {
     
     // Type aliases, variables and functions handling account confirmations.
     
-    typealias confirmationClosure = (confirmationResponse) -> Void
+    typealias ConfirmationClosure = (ConfirmationResponse) -> Void
     
-    var confirmationSuccessClosure: ((confirmationResponse) -> ())? = nil
-    var confirmationFailureClosure: ((confirmationResponse) -> ())? = nil
+    var confirmationSuccessClosure: ((ConfirmationResponse) -> ())? = nil
+    var confirmationFailureClosure: ((ConfirmationResponse) -> ())? = nil
     
-    func onConfirmationSuccess(closure: (confirmationResponse) -> ()) {
+    func onConfirmationSuccess(closure: (ConfirmationResponse) -> ()) {
         confirmationSuccessClosure = closure
     }
     
-    func onConfirmationFailure(closure: (confirmationResponse) -> ()) -> Self {
+    func onConfirmationFailure(closure: (ConfirmationResponse) -> ()) -> Self {
         confirmationFailureClosure = closure
         return self
     }
     
-    func doConfirmationSuccess(params: confirmationResponse) {
+    func doConfirmationSuccess(params: ConfirmationResponse) {
         if let closure = confirmationSuccessClosure {
             closure(params)
         }
     }
     
-    func doConfirmationFailure(params: confirmationResponse) {
+    func doConfirmationFailure(params: ConfirmationResponse) {
         if let closure = confirmationFailureClosure {
             closure(params)
         }
@@ -104,28 +110,84 @@ public class Pool {
     
     // Type aliases, variables and functions handling password changes.
     
-    typealias changePasswordClosure = (changePasswordResponse) -> Void
+    typealias ChangePasswordClosure = (ChangePasswordResponse) -> Void
     
-    var changePasswordSuccessClosure: ((changePasswordResponse) -> ())? = nil
-    var changePasswordFailureClosure: ((changePasswordResponse) -> ())? = nil
+    var changePasswordSuccessClosure: ((ChangePasswordResponse) -> ())? = nil
+    var changePasswordFailureClosure: ((ChangePasswordResponse) -> ())? = nil
     
-    func onChangePasswordSuccess(closure: (changePasswordResponse) -> ()) {
+    func onChangePasswordSuccess(closure: (ChangePasswordResponse) -> ()) {
         changePasswordSuccessClosure = closure
     }
     
-    func onChangePasswordFailure(closure: (changePasswordResponse) -> ()) -> Self {
+    func onChangePasswordFailure(closure: (ChangePasswordResponse) -> ()) -> Self {
         changePasswordFailureClosure = closure
         return self
     }
     
-    func doChangePasswordSuccess(params: changePasswordResponse) {
+    func doChangePasswordSuccess(params: ChangePasswordResponse) {
         if let closure = changePasswordSuccessClosure {
             closure(params)
         }
     }
     
-    func doChangePasswordFailure(params: changePasswordResponse) {
+    func doChangePasswordFailure(params: ChangePasswordResponse) {
         if let closure = changePasswordFailureClosure {
+            closure(params)
+        }
+    }
+    
+    // Type aliases, variables and functions handling forgotten passwords.
+    
+    typealias ForgottenPasswordClosure = (ForgottenPasswordResponse) -> Void
+    
+    var forgottenPasswordSuccessClosure: ((ForgottenPasswordResponse) -> ())? = nil
+    var forgottenPasswordFailureClosure: ((ForgottenPasswordResponse) -> ())? = nil
+    
+    func onForgottenPasswordSuccess(closure: (ForgottenPasswordResponse) -> ()) {
+        forgottenPasswordSuccessClosure = closure
+    }
+    
+    func onForgottenPasswordFailure(closure: (ForgottenPasswordResponse) -> ()) -> Self {
+        forgottenPasswordFailureClosure = closure
+        return self
+    }
+    
+    func doForgottenPasswordSuccess(params: ForgottenPasswordResponse) {
+        if let closure = forgottenPasswordSuccessClosure {
+            closure(params)
+        }
+    }
+    
+    func doForgottenPasswordFailure(params: ForgottenPasswordResponse) {
+        if let closure = forgottenPasswordFailureClosure {
+            closure(params)
+        }
+    }
+    
+    // Type aliases, variables and functions handling forgotten passwords.
+    
+    typealias ForgottenPasswordConfirmationClosure = (ForgottenPasswordConfirmationResponse) -> Void
+    
+    var forgottenPasswordConfirmationSuccessClosure: ((ForgottenPasswordConfirmationResponse) -> ())? = nil
+    var forgottenPasswordConfirmationFailureClosure: ((ForgottenPasswordConfirmationResponse) -> ())? = nil
+    
+    func onForgottenPasswordConfirmationSuccess(closure: (ForgottenPasswordConfirmationResponse) -> ()) {
+        forgottenPasswordConfirmationSuccessClosure = closure
+    }
+    
+    func onForgottenPasswordConfirmationFailure(closure: (ForgottenPasswordConfirmationResponse) -> ()) -> Self {
+        forgottenPasswordConfirmationFailureClosure = closure
+        return self
+    }
+    
+    func doForgottenPasswordConfirmationSuccess(params: ForgottenPasswordConfirmationResponse) {
+        if let closure = forgottenPasswordConfirmationSuccessClosure {
+            closure(params)
+        }
+    }
+    
+    func doForgottenPasswordConfirmationFailure(params: ForgottenPasswordConfirmationResponse) {
+        if let closure = forgottenPasswordConfirmationFailureClosure {
             closure(params)
         }
     }
@@ -136,8 +198,11 @@ public class Pool {
         let serviceConfiguration = AWSServiceConfiguration(region: .usEast1, credentialsProvider: nil)
         let userPoolConfiguration = AWSCognitoIdentityUserPoolConfiguration(clientId: "7r9126v4vlsopi2eovtvqumfc7", clientSecret: "1jfbad1tia2vuvt9v583p4a3h4tbi3u22v2hle06sg0p97682mbd", poolId: "us-east-1_y5cEV6M8J")
         AWSCognitoIdentityUserPool.register(with: serviceConfiguration, userPoolConfiguration: userPoolConfiguration, forKey: "UserPool")
-        return AWSCognitoIdentityUserPool(forKey: "UserPool")
+        let pool = AWSCognitoIdentityUserPool(forKey: "UserPool")
+        return pool
     }
+    
+    var user: AWSCognitoIdentityUser? = nil
     
     func signUp(userEmail: String, userPassword: String) -> Self {
         
@@ -205,6 +270,50 @@ public class Pool {
                 print(task.result)
                 
                 self.doConfirmationSuccess(params: task)
+            }
+            
+            return nil
+        })
+        
+        return self
+    }
+    
+    func forgotPassword(userEmail: String) -> Self {
+        let user = userPool().getUser(userEmail)
+        
+        user.forgotPassword().continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
+            if task.error != nil {
+                print(task.error!)
+                
+                self.doForgottenPasswordFailure(params: task)
+                
+            }
+            else {
+                print(task.result)
+                
+                self.doForgottenPasswordSuccess(params: task)
+            }
+            
+            return nil
+        })
+        
+        return self
+    }
+    
+    func confirmForgotPassword(userEmail: String, confirmationString: String, passcode: String) -> Self {
+        let user = userPool().getUser(userEmail)
+        
+        user.confirmForgotPassword(confirmationString, password: passcode).continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
+            if task.error != nil {
+                print(task.error!)
+                
+                self.doForgottenPasswordConfirmationFailure(params: task)
+                
+            }
+            else {
+                print(task.result)
+                
+                self.doForgottenPasswordConfirmationSuccess(params: task)
             }
             
             return nil

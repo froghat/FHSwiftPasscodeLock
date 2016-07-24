@@ -11,7 +11,7 @@ import AWSCore
 import AWSCognitoIdentityProvider
 import SCLAlertView
 
-public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDelegate, AWSCognitoIdentityPasswordAuthentication, AWSCognitoIdentityMultiFactorAuthentication {
+public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDelegate, AWSCognitoIdentityInteractiveAuthenticationDelegate, AWSCognitoIdentityPasswordAuthentication, AWSCognitoIdentityMultiFactorAuthentication {
     
     public var page = 0
     
@@ -20,7 +20,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         case SetPasscode(email: String?)
         case ChangePasscode(email: String?)
         case RemovePasscode
-        case AWSConfirmation(email: String)
+        case AWSCode(email: String?, codeType: AWSCodeType)
         
         func getState() -> PasscodeLockStateType {
             
@@ -29,7 +29,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
                 case .SetPasscode(let email): return SetPasscodeState(userEmail: email)
                 case .ChangePasscode(let email): return ChangePasscodeState(userEmail: email)
                 case .RemovePasscode: return EnterPasscodeState(allowCancellation: true)
-                case .AWSConfirmation(let email): return AWSConfirmationState(userEmail: email)
+                case .AWSCode(let email, let codeType): return AWSCodeState(userEmail: email, codeType: codeType)
             }
         }
     }
@@ -46,6 +46,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     public var dismissCompletionCallback: (()->Void)?
     public var animateOnDismiss: Bool
     public var notificationCenter: NotificationCenter?
+    public var passedEmail: String?
     
     internal let passcodeConfiguration: PasscodeLockConfigurationType
     internal let passcodeLock: PasscodeLockType
@@ -92,6 +93,9 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     
     public override func viewDidLoad() {
         super.viewDidLoad()
+        
+        Pool.sharedInstance.userPool().delegate = self
+        Pool.sharedInstance.user = Pool.sharedInstance.userPool().getUser(passedEmail!)
         
         updatePasscodeView()
         deleteSignButton?.isEnabled = false
@@ -219,14 +223,6 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         }
     }
     
-    public func getCode(_ authenticationInput: AWSCognitoIdentityMultifactorAuthenticationInput, mfaCodeCompletionSource: AWSTaskCompletionSource<NSString>) {
-        
-    }
-    
-    public func didCompleteMultifactorAuthenticationStepWithError(_ error: NSError) {
-        
-    }
-    
     // MARK: - Animations
     
     internal func animateWrongPassword() {
@@ -276,12 +272,6 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     
     public func passcodeLockDidSucceed(lock: PasscodeLockType) {
         
-        if lock.state is ConfirmPasscodeState {
-            if self.parent is UIPageViewController {
-                
-            }
-        }
-        
         deleteSignButton?.isEnabled = true
         animatePlaceholders(placeholders: placeholders, toState: .Inactive)
         dismissPasscodeLock(lock: lock, completionHandler: { [weak self] _ in
@@ -292,35 +282,12 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     public func passcodeLockDidFail(lock: PasscodeLockType, failureType: FailureType) {
         
         if failureType == .emailTaken {
-            let alert = SCLAlertView()
             
-            if lock.state is ConfirmPasscodeState {
-                
-            }
+            emailTakenAlert(lock: lock)
             
-            let txt = alert.addTextField("Enter a new email")
-            
-            _ = alert.addButton("Try Again With New Email") {
-                DispatchQueue.main.async {
-                    print("Changing state")
-                    let state = SetPasscodeState(userEmail: txt.text!)
-                    lock.changeStateTo(state: state)
-                }
-            }
-            
-            _ = alert.addButton("Request a Password Reset") {
-                DispatchQueue.main.async {
-                    print("Changing state")
-                    
-                    if let currentLock = lock.state as? SetPasscodeState {
-                        print("Changing passcode.")
-                        let state = ChangePasscodeState(userEmail: currentLock.getEmail())
-                        lock.changeStateTo(state: state)
-                    }
-                }
-            }
-            
-            _ = alert.showInfo("Email is Already Taken", subTitle: "Please input a new email or request a password reset.", closeButtonTitle: "Go Back", duration: 0)
+        }
+        else if failureType == .notConfirmed {
+            notConfirmedAlert(lock: lock)
         }
         else if failureType == .wrongCredentials {
             
@@ -351,5 +318,95 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
             
             deleteSignButton?.isEnabled = false
         }
+    }
+    
+    // MARK: - SCLAlertViews
+    
+    func emailTakenAlert(lock: PasscodeLockType) {
+        let alert = SCLAlertView()
+        
+        let txt = alert.addTextField("Enter a new email")
+        
+        _ = alert.addButton("Try Again With New Email") {
+            print("Changing state")
+            self.switchToSetPasscodeState(lock: lock, email: txt.text!)
+        }
+        
+        _ = alert.addButton("Forgot Password") {
+            print("Attempting to change a forgotten passcode.")
+            
+            Pool.sharedInstance.forgotPassword(userEmail: lock.state.getEmail()!).onForgottenPasswordFailure {task in
+                
+                if task.error?.code == 7 {
+                    print("User must be confirmed to claim a forgotten password. Sort of ridiculous, but whatever.")
+                    self.passcodeLockDidFail(lock: lock, failureType: .notConfirmed)
+                }
+                else {
+                    self.passcodeLockDidFail(lock: lock, failureType: .unknown)
+                }
+                
+            }.onForgottenPasswordSuccess {task in
+                self.switchToAWSCodeState(lock: lock, codeType: .forgottenPassword)
+            }
+        }
+        
+        _ = alert.showInfo("Email is Already Taken", subTitle: "Please input a new email or request a password reset.", closeButtonTitle: "Go Back", duration: 0)
+    }
+    
+    func notConfirmedAlert(lock: PasscodeLockType) {
+        let alert = SCLAlertView()
+        
+        _ = alert.addButton("Confirm Email") {
+            self.switchToAWSCodeState(lock: lock, codeType: .confirmation)
+        }
+        
+        _ = alert.showNotice("Email Uncomfirmed", subTitle: "Please continue to email confirmation before attempting that task again.", closeButtonTitle: "Go Back", duration: 0)
+    }
+    
+    // MARK: - State Changing Methods
+    
+    func switchToAWSCodeState(lock: PasscodeLockType, codeType: AWSCodeType) {
+        DispatchQueue.main.async {
+            let nextState = AWSCodeState(userEmail: lock.state.getEmail(), codeType: codeType)
+            lock.changeStateTo(state: nextState)
+        }
+    }
+    
+    func switchToChangePasscodeState(lock: PasscodeLockType) {
+        DispatchQueue.main.async {
+            let nextState = ChangePasscodeState(userEmail: lock.state.getEmail())
+            lock.changeStateTo(state: nextState)
+        }
+    }
+    
+    func switchToSetPasscodeState(lock: PasscodeLockType, email: String? = nil) {
+        DispatchQueue.main.async {
+            if email == nil {
+                let nextState = SetPasscodeState(userEmail: lock.state.getEmail())
+                lock.changeStateTo(state: nextState)
+            }
+            else {
+                let nextState = SetPasscodeState(userEmail: email)
+                lock.changeStateTo(state: nextState)
+            }
+        }
+    }
+    
+    // MARK: - AWS Protocol Methods
+    
+    public func startPasswordAuthentication() -> AWSCognitoIdentityPasswordAuthentication {
+        return self
+    }
+    
+    public func startMultiFactorAuthentication() -> AWSCognitoIdentityMultiFactorAuthentication {
+        return self
+    }
+    
+    public func getCode(_ authenticationInput: AWSCognitoIdentityMultifactorAuthenticationInput, mfaCodeCompletionSource: AWSTaskCompletionSource<NSString>) {
+        
+    }
+    
+    public func didCompleteMultifactorAuthenticationStepWithError(_ error: NSError) {
+        
     }
 }

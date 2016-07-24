@@ -89,7 +89,7 @@ struct EnterPasscodeState: PasscodeLockStateType {
         
         DispatchQueue.main.async {
             
-            lock.changeStateTo(state: AWSConfirmationState(userEmail: self.emailToLogIn!))
+            lock.changeStateTo(state: AWSCodeState(userEmail: self.emailToLogIn!, codeType: .confirmation))
         }
     }
     
@@ -104,5 +104,10 @@ struct EnterPasscodeState: PasscodeLockStateType {
         isNotificationSent = true
     }
     
+    // Needed to pull the email for AWS.
+    func getEmail() -> String? {
+        
+        return emailToLogIn
+    }
     
 }
