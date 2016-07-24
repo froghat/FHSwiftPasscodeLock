@@ -16,20 +16,20 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     public var page = 0
     
     public enum LockState {
-        case EnterPasscode(email: String?)
-        case SetPasscode(email: String?)
-        case ChangePasscode(email: String?)
+        case EnterPasscode
+        case SetPasscode
+        case ChangePasscode
         case RemovePasscode
-        case AWSCode(email: String?, codeType: AWSCodeType)
+        case AWSCode(codeType: AWSCodeType)
         
         func getState() -> PasscodeLockStateType {
             
             switch self {
-                case .EnterPasscode(let email): return EnterPasscodeState(userEmail: email)
-                case .SetPasscode(let email): return SetPasscodeState(userEmail: email)
-                case .ChangePasscode(let email): return ChangePasscodeState(userEmail: email)
+                case .EnterPasscode: return EnterPasscodeState()
+                case .SetPasscode: return SetPasscodeState()
+                case .ChangePasscode: return ChangePasscodeState()
                 case .RemovePasscode: return EnterPasscodeState(allowCancellation: true)
-                case .AWSCode(let email, let codeType): return AWSCodeState(userEmail: email, codeType: codeType)
+                case .AWSCode(let codeType): return AWSCodeState(codeType: codeType)
             }
         }
     }
@@ -95,7 +95,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         super.viewDidLoad()
         
         Pool.sharedInstance.userPool().delegate = self
-        Pool.sharedInstance.user = Pool.sharedInstance.userPool().getUser(passedEmail!)
+        Pool.sharedInstance.setEmail(email: passedEmail!)
         
         updatePasscodeView()
         deleteSignButton?.isEnabled = false
@@ -335,7 +335,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         _ = alert.addButton("Forgot Password") {
             print("Attempting to change a forgotten passcode.")
             
-            Pool.sharedInstance.forgotPassword(userEmail: lock.state.getEmail()!).onForgottenPasswordFailure {task in
+            Pool.sharedInstance.forgotPassword().onForgottenPasswordFailure {task in
                 
                 if task.error?.code == 7 {
                     print("User must be confirmed to claim a forgotten password. Sort of ridiculous, but whatever.")
@@ -367,14 +367,14 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     
     func switchToAWSCodeState(lock: PasscodeLockType, codeType: AWSCodeType) {
         DispatchQueue.main.async {
-            let nextState = AWSCodeState(userEmail: lock.state.getEmail(), codeType: codeType)
+            let nextState = AWSCodeState(codeType: codeType)
             lock.changeStateTo(state: nextState)
         }
     }
     
     func switchToChangePasscodeState(lock: PasscodeLockType) {
         DispatchQueue.main.async {
-            let nextState = ChangePasscodeState(userEmail: lock.state.getEmail())
+            let nextState = ChangePasscodeState()
             lock.changeStateTo(state: nextState)
         }
     }
@@ -382,11 +382,11 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     func switchToSetPasscodeState(lock: PasscodeLockType, email: String? = nil) {
         DispatchQueue.main.async {
             if email == nil {
-                let nextState = SetPasscodeState(userEmail: lock.state.getEmail())
+                let nextState = SetPasscodeState()
                 lock.changeStateTo(state: nextState)
             }
             else {
-                let nextState = SetPasscodeState(userEmail: email)
+                let nextState = SetPasscodeState()
                 lock.changeStateTo(state: nextState)
             }
         }

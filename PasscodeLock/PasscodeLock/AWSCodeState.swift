@@ -16,12 +16,10 @@ struct AWSCodeState: PasscodeLockStateType {
     let isCancellableAction = true
     var isTouchIDAllowed = false
     
-    private var email: String?
     private var codeNeeded: AWSCodeType
     
-    init(userEmail: String?, codeType: AWSCodeType) {
+    init(codeType: AWSCodeType) {
         
-        email = userEmail
         codeNeeded = codeType
         
         title = localizedStringFor(key: "PasscodeLockConfirmationTitle", comment: "Change passcode title")
@@ -54,7 +52,7 @@ struct AWSCodeState: PasscodeLockStateType {
     
     func confirmAWSUser(confirmationString: String, lock: PasscodeLockType) {
         
-        Pool().confirm(userEmail: email!, confirmationString: confirmationString).onConfirmationFailure {task in
+        Pool.sharedInstance.confirm(confirmationString: confirmationString).onConfirmationFailure {task in
             
             DispatchQueue.main.async {
                 lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown)
@@ -63,7 +61,7 @@ struct AWSCodeState: PasscodeLockStateType {
         }.onConfirmationSuccess {task in
             
             DispatchQueue.main.async {
-                let nextState = EnterPasscodeState(userEmail: self.email)
+                let nextState = EnterPasscodeState()
 
                 lock.changeStateTo(state: nextState)
             }
@@ -73,7 +71,7 @@ struct AWSCodeState: PasscodeLockStateType {
     
     func confirmForgottenAWSPassword(confirmationString: String, passcode: String, lock: PasscodeLockType) {
         
-        Pool().confirmForgotPassword(userEmail: email!, confirmationString: confirmationString, passcode: passcode).onForgottenPasswordConfirmationFailure {task in
+        Pool.sharedInstance.confirmForgotPassword(confirmationString: confirmationString, passcode: passcode).onForgottenPasswordConfirmationFailure {task in
             
             DispatchQueue.main.async {
                 lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown)
@@ -82,17 +80,11 @@ struct AWSCodeState: PasscodeLockStateType {
         }.onForgottenPasswordConfirmationSuccess {task in
                 
             DispatchQueue.main.async {
-                let nextState = ChangePasscodeState(userEmail: self.email)
+                let nextState = ChangePasscodeState()
                     
                 lock.changeStateTo(state: nextState)
             }
                 
         }
-    }
-    
-    // Needed to pull the email for AWS.
-    func getEmail() -> String? {
-        
-        return email
     }
 }

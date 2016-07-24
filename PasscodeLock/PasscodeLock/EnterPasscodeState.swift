@@ -18,17 +18,8 @@ struct EnterPasscodeState: PasscodeLockStateType {
     let isCancellableAction: Bool
     var isTouchIDAllowed = true
     
-    private var emailToLogIn: String?
     private var inccorectPasscodeAttempts = 0
     private var isNotificationSent = false
-    
-    init(userEmail: String?, allowCancellation: Bool = false) {
-        
-        emailToLogIn = userEmail
-        isCancellableAction = allowCancellation
-        title = localizedStringFor(key: "PasscodeLockEnterTitle", comment: "Enter passcode title")
-        description = localizedStringFor(key: "PasscodeLockEnterDescription", comment: "Enter passcode description")
-    }
     
     init(allowCancellation: Bool = false) {
         
@@ -43,7 +34,7 @@ struct EnterPasscodeState: PasscodeLockStateType {
             return
         }
         
-        if emailToLogIn != nil {
+        if Pool.sharedInstance.user != nil {
             logInAWSUser(userPassword: lock.repository.getPasscode(), lock: lock)
         }
         else {
@@ -69,10 +60,10 @@ struct EnterPasscodeState: PasscodeLockStateType {
     
     func logInAWSUser(userPassword: String, lock: PasscodeLockType) {
         
-        Pool().logIn(userEmail: emailToLogIn!, userPassword: userPassword).onLogInFailure {(task, user) in
+        Pool.sharedInstance.logIn(userPassword: userPassword).onLogInFailure {task in
             
             if task.error?.code == 11 {
-                self.jumpToConfirmationLock(user: user, lock: lock)
+                self.jumpToConfirmationLock(user: Pool.sharedInstance.user!, lock: lock)
             }
             
         }.onLogInSuccess {task in
@@ -89,7 +80,7 @@ struct EnterPasscodeState: PasscodeLockStateType {
         
         DispatchQueue.main.async {
             
-            lock.changeStateTo(state: AWSCodeState(userEmail: self.emailToLogIn!, codeType: .confirmation))
+            lock.changeStateTo(state: AWSCodeState(codeType: .confirmation))
         }
     }
     
@@ -102,12 +93,6 @@ struct EnterPasscodeState: PasscodeLockStateType {
         center.post(name: NSNotification.Name(rawValue: PasscodeLockIncorrectPasscodeNotification), object: nil)
         
         isNotificationSent = true
-    }
-    
-    // Needed to pull the email for AWS.
-    func getEmail() -> String? {
-        
-        return emailToLogIn
     }
     
 }

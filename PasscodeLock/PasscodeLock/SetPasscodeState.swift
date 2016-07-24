@@ -16,28 +16,19 @@ struct SetPasscodeState: PasscodeLockStateType {
     var isTouchIDAllowed = false
     let changingPasscode: Bool
     
-    private var email: String?
-    
-    init(userEmail: String?, fromChange: Bool = false, title: String, description: String) {
+    init(fromChange: Bool = false, title: String, description: String) {
         
-        self.email = userEmail
         changingPasscode = fromChange
         
         self.title = title
         self.description = description
     }
     
-    init(userEmail: String?, fromChange: Bool = false) {
-        email = userEmail
-        changingPasscode = fromChange
-        
-        title = localizedStringFor(key: "PasscodeLockSetTitle", comment: "Set passcode title")
-        description = localizedStringFor(key: "PasscodeLockSetDescription", comment: "Set passcode description")
-    }
     
-    init() {
-        email = nil
-        changingPasscode = false
+    
+    init(fromChange: Bool = false) {
+        
+        changingPasscode = fromChange
         
         title = localizedStringFor(key: "PasscodeLockSetTitle", comment: "Set passcode title")
         description = localizedStringFor(key: "PasscodeLockSetDescription", comment: "Set passcode description")
@@ -45,14 +36,8 @@ struct SetPasscodeState: PasscodeLockStateType {
     
     func acceptPasscode(passcode: [String], fromLock lock: PasscodeLockType) {
         
-        let nextState = ConfirmPasscodeState(userEmail: self.email, passcode: passcode, fromChange: changingPasscode)
+        let nextState = ConfirmPasscodeState(passcode: passcode, fromChange: changingPasscode)
         
         lock.changeStateTo(state: nextState)
-    }
-    
-    // Needed to pull the email for AWS.
-    func getEmail() -> String? {
-        
-        return email
     }
 }

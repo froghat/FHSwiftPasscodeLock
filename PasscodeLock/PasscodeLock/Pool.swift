@@ -15,6 +15,21 @@ public class Pool {
     
     static let sharedInstance = Pool()
     
+    private init() {} // This prevents others from using the default '()' initializer.
+    
+    // Email and user objects necessary for the AWS methods.
+    
+    private var userEmail: String? = nil
+    
+    internal var user: AWSCognitoIdentityUser? = nil
+    
+    // Method to set these when a PasscodeLock is created.
+    
+    public func setEmail(email: String) {
+        userEmail = email
+        user = userPool().getUser(email)
+    }
+    
     // Type aliases for AWSCognitoIdentyProvider Tasks.
     
     typealias SignUpResponse = AWSTask<AWSCognitoIdentityUserPoolSignUpResponse>
@@ -57,13 +72,13 @@ public class Pool {
     typealias LogInClosure = (LogInResponse) -> Void
     
     var logInSuccessClosure: ((LogInResponse) -> ())? = nil
-    var logInFailureClosure: ((LogInResponse, AWSCognitoIdentityUser) -> ())? = nil
+    var logInFailureClosure: ((LogInResponse) -> ())? = nil
     
     func onLogInSuccess(closure: (LogInResponse) -> ()) {
         logInSuccessClosure = closure
     }
     
-    func onLogInFailure(closure: (LogInResponse, AWSCognitoIdentityUser) -> ()) -> Self {
+    func onLogInFailure(closure: (LogInResponse) -> ()) -> Self {
         logInFailureClosure = closure
         return self
     }
@@ -74,9 +89,9 @@ public class Pool {
         }
     }
     
-    func doLogInFailure(param1: LogInResponse, param2: AWSCognitoIdentityUser) {
+    func doLogInFailure(params: LogInResponse) {
         if let closure = logInFailureClosure {
-            closure(param1, param2)
+            closure(params)
         }
     }
     
@@ -202,9 +217,7 @@ public class Pool {
         return pool
     }
     
-    var user: AWSCognitoIdentityUser? = nil
-    
-    func signUp(userEmail: String, userPassword: String) -> Self {
+    func signUp(userPassword: String) -> Self {
         
         let email = AWSCognitoIdentityUserAttributeType()
         email?.name = "email"
@@ -222,6 +235,8 @@ public class Pool {
                 print(task.result)
                 
                 self.doSignUpSuccess(params: task)
+                
+                self.user = self.userPool().getUser(self.userEmail!)
             }
             
             return nil
@@ -231,15 +246,14 @@ public class Pool {
     }
     
     // Log the user in.
-    func logIn(userEmail: String, userPassword: String) -> Self {
-        let user = userPool().getUser(userEmail)
+    func logIn(userPassword: String) -> Self {
         
-        user.getSession(userEmail, password: userPassword, validationData: nil, scopes: nil).continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
+        user?.getSession(userEmail!, password: userPassword, validationData: nil, scopes: nil).continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
             
             if task.error != nil {
                 print(task.error!)
                 
-                self.doLogInFailure(param1: task, param2: user)
+                self.doLogInFailure(params: task)
                 
             }
             else {
@@ -255,10 +269,9 @@ public class Pool {
     }
     
     // Confirm the user's email.
-    func confirm(userEmail: String, confirmationString: String) -> Self {
-        let user = userPool().getUser(userEmail)
+    func confirm(confirmationString: String) -> Self {
         
-        user.confirmSignUp(confirmationString).continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
+        user?.confirmSignUp(confirmationString).continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
             
             if task.error != nil {
                 print(task.error!)
@@ -278,10 +291,9 @@ public class Pool {
         return self
     }
     
-    func forgotPassword(userEmail: String) -> Self {
-        let user = userPool().getUser(userEmail)
+    func forgotPassword() -> Self {
         
-        user.forgotPassword().continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
+        user?.forgotPassword().continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
             if task.error != nil {
                 print(task.error!)
                 
@@ -300,10 +312,9 @@ public class Pool {
         return self
     }
     
-    func confirmForgotPassword(userEmail: String, confirmationString: String, passcode: String) -> Self {
-        let user = userPool().getUser(userEmail)
+    func confirmForgotPassword(confirmationString: String, passcode: String) -> Self {
         
-        user.confirmForgotPassword(confirmationString, password: passcode).continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
+        user?.confirmForgotPassword(confirmationString, password: passcode).continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
             if task.error != nil {
                 print(task.error!)
                 
@@ -322,11 +333,9 @@ public class Pool {
         return self
     }
     
-    func changePassword(userEmail: String, currentPassword: String, proposedPassword: String) -> Self {
+    func changePassword(currentPassword: String, proposedPassword: String) -> Self {
         
-        let user = userPool().getUser(userEmail)
-        
-        user.changePassword(currentPassword, proposedPassword: proposedPassword).continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
+        user?.changePassword(currentPassword, proposedPassword: proposedPassword).continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
             
             if task.error != nil {
                 print(task.error!)
