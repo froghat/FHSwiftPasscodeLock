@@ -9,6 +9,8 @@
 import Foundation
 import AWSCognitoIdentityProvider
 
+let AWS_EMAIL_KEY = "awsEmailKey"
+
 public class Pool {
     
     // Make class usable as a singleton This is so we can set a delegate for the user pool and maintain it.
@@ -28,6 +30,9 @@ public class Pool {
     public func setEmail(email: String) {
         userEmail = email
         user = userPool().getUser(email)
+        
+        // Set the default email so a user can login from app opening.
+        UserDefaults.standard.set(email, forKey: AWS_EMAIL_KEY)
     }
     
     // Type aliases for AWSCognitoIdentyProvider Tasks.
