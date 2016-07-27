@@ -34,8 +34,18 @@ struct EnterPasscodeState: PasscodeLockStateType {
             return
         }
         
+        var passcodeString: String {
+            var str = ""
+            
+            for char in passcode {
+                str += char
+            }
+            
+            return str
+        }
+        
         if Pool.sharedInstance.user != nil {
-            logInAWSUser(userPassword: lock.repository.getPasscode(), lock: lock)
+            logInAWSUser(userPassword: passcodeString, lock: lock)
         }
         else {
         
@@ -63,22 +73,17 @@ struct EnterPasscodeState: PasscodeLockStateType {
         Pool.sharedInstance.logIn(userPassword: userPassword).onLogInFailure {task in
             
             if task.error?.code == 11 {
-                self.jumpToConfirmationLock(user: Pool.sharedInstance.user!, lock: lock)
+                print("That is the wrong passcode. Literally go fuck yourself.")
+                lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .incorrectPasscode, priorAction: .unknown)
+            }
+            else {
+                lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
             }
             
         }.onLogInSuccess {task in
             
             lock.delegate?.passcodeLockDidSucceed(lock: lock)
                 
-        }
-    }
-    
-    func jumpToConfirmationLock(user: AWSCognitoIdentityUser, lock: PasscodeLockType) {
-        print("Not Authenticated.")
-        
-        DispatchQueue.main.async {
-            
-            lock.changeStateTo(state: AWSCodeState(codeType: .confirmation))
         }
     }
     

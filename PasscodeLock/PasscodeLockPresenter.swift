@@ -57,15 +57,22 @@ public class PasscodeLockPresenter {
         
         let passcodeLockVC = PasscodeLockViewController(state: .EnterPasscode, configuration: passcodeConfiguration)
         passcodeLockVC.passedEmail = email
-//        let userDismissCompletionCallback = passcodeLockVC.dismissCompletionCallback
+        
+        //let lock = passcodeLockVC.passcodeLock
+        
         let userDismissCompletionCallback = completion
 
         
-        passcodeLockVC.dismissCompletionCallback = { [weak self] in
+        passcodeLockVC.successCallback = {lock in
             
             userDismissCompletionCallback?()
             
-            self?.dismissPasscodeLock()
+            self.dismissPasscodeLock()
+        }
+        
+        passcodeLockVC.dismissCompletionCallback = {
+            self.dismissPasscodeLock()
+            
         }
         
         passcodeLockWindow.rootViewController = passcodeLockVC

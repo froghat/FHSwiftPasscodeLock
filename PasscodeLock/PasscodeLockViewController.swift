@@ -74,6 +74,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     @IBOutlet public weak var cancelButton: UIButton?
     @IBOutlet public weak var deleteSignButton: UIButton?
     @IBOutlet public weak var touchIDButton: UIButton?
+    @IBOutlet public weak var viewIntroductionButton: UIButton?
     @IBOutlet public weak var placeholdersX: NSLayoutConstraint?
     
     public var successCallback: ((lock: PasscodeLockType) -> Void)?
@@ -202,6 +203,11 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     @IBAction func touchIDButtonTap(_ sender: UIButton) {
         
         passcodeLock.authenticateWithBiometrics()
+    }
+    
+    @IBAction func viewIntroductionButtonTap(_ sender: UIButton) {
+        
+        self.dismissPasscodeLock(lock: passcodeLock)
     }
     
     private func authenticateWithBiometrics() {
