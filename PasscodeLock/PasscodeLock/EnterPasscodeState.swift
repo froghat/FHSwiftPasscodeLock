@@ -9,6 +9,8 @@
 import Foundation
 import AWSCognitoIdentityProvider
 
+let AWS_LOGIN_INFORMATION = "AWSLoginInformationKey"
+
 public let PasscodeLockIncorrectPasscodeNotification = "passcode.lock.incorrect.passcode.notification"
 
 struct EnterPasscodeState: PasscodeLockStateType {
@@ -81,6 +83,10 @@ struct EnterPasscodeState: PasscodeLockStateType {
             }
             
         }.onLogInSuccess {task in
+            
+            let userDict: NSDictionary = ["hasLoggedIn": true, "email": Pool.sharedInstance.user!.username!, "password": userPassword]
+            print(userDict)
+            UserDefaults.standard.set(userDict, forKey: AWS_LOGIN_INFORMATION)
             
             lock.delegate?.passcodeLockDidSucceed(lock: lock)
                 

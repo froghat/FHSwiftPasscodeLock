@@ -129,7 +129,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     public override func viewDidLoad() {
         super.viewDidLoad()
         
-        Pool.sharedInstance.userPool().delegate = self
+        Pool.sharedInstance.userPool?.delegate = self
         Pool.sharedInstance.setEmail(email: passedEmail!)
         
         updatePasscodeView()
@@ -241,7 +241,10 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
             
         } else if parent?.childViewControllers.contains(self) == true {
             
+            
             self.dismissCompletionCallback?()
+            
+            completionHandler?()
             
             return
         }
@@ -314,9 +317,10 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         
         deleteSignButton?.isEnabled = true
         animatePlaceholders(placeholders: placeholders, toState: .Inactive)
-        dismissPasscodeLock(lock: lock, completionHandler: { [weak self] _ in
-            self?.successCallback?(lock: lock)
-        })
+        dismissPasscodeLock(lock: lock) {
+            print("Calling success callback")
+            self.successCallback?(lock: lock)
+        }
     }
     
     public func passcodeLockDidFail(lock: PasscodeLockType, failureType: FailureType, priorAction: ActionAfterConfirmation = .unknown) {
@@ -450,16 +454,6 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     
     public func didCompleteMultifactorAuthenticationStepWithError(_ error: NSError) {
         
-    }
-    
-    // Hate to add this, but I need to figure out how to only call a callback when trying to log in.
-    public func isLoggingIn() -> Bool {
-        if self.passcodeLock.state is EnterPasscodeState {
-            return true
-        }
-        else {
-            return false
-        }
     }
 }
 

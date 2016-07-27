@@ -15,7 +15,7 @@ public class Pool {
     
     // Make class usable as a singleton This is so we can set a delegate for the user pool and maintain it.
     
-    static let sharedInstance = Pool()
+    public static let sharedInstance = Pool()
     
     private init() {} // This prevents others from using the default '()' initializer.
     
@@ -23,16 +23,28 @@ public class Pool {
     
     private var userEmail: String? = nil
     
+    internal var userPool: AWSCognitoIdentityUserPool? = nil
+    
     internal var user: AWSCognitoIdentityUser? = nil
     
-    // Method to set these when a PasscodeLock is created.
+    // Method to set the email when a PasscodeLock is created.
     
     public func setEmail(email: String) {
         userEmail = email
-        user = userPool().getUser(email)
+        user = userPool?.getUser(email)
         
         // Set the default email so a user can login from app opening.
         UserDefaults.standard.set(email, forKey: AWS_EMAIL_KEY)
+    }
+    
+    // Method to set the userPool in AppDelegate.
+    
+    public func setUserPool(region: AWSRegionType, credentialsProvider: AWSCredentialsProvider?, clientID: String, clientSecret: String?, poolID: String) {
+        let serviceConfiguration = AWSServiceConfiguration(region: region, credentialsProvider: credentialsProvider)
+        let userPoolConfiguration = AWSCognitoIdentityUserPoolConfiguration(clientId: clientID, clientSecret: clientSecret, poolId: poolID)
+        AWSCognitoIdentityUserPool.register(with: serviceConfiguration, userPoolConfiguration: userPoolConfiguration, forKey: "UserPool")
+        let pool = AWSCognitoIdentityUserPool(forKey: "UserPool")
+        self.userPool = pool
     }
     
     // Type aliases for AWSCognitoIdentyProvider Tasks.
@@ -214,14 +226,6 @@ public class Pool {
     
     // AWSCognitoIdentityProvider authentication methods.
     
-    let userPool: () -> AWSCognitoIdentityUserPool = {
-        let serviceConfiguration = AWSServiceConfiguration(region: .usEast1, credentialsProvider: nil)
-        let userPoolConfiguration = AWSCognitoIdentityUserPoolConfiguration(clientId: "7r9126v4vlsopi2eovtvqumfc7", clientSecret: "1jfbad1tia2vuvt9v583p4a3h4tbi3u22v2hle06sg0p97682mbd", poolId: "us-east-1_y5cEV6M8J")
-        AWSCognitoIdentityUserPool.register(with: serviceConfiguration, userPoolConfiguration: userPoolConfiguration, forKey: "UserPool")
-        let pool = AWSCognitoIdentityUserPool(forKey: "UserPool")
-        return pool
-    }
-    
     func signUp(userPassword: String) -> Self {
         
         let email = AWSCognitoIdentityUserAttributeType()
@@ -229,7 +233,7 @@ public class Pool {
         email?.value = userEmail
         
         // Sign the user up.
-        userPool().signUp(email!.value!, password: userPassword, userAttributes: [email!], validationData: nil).continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
+        userPool?.signUp(email!.value!, password: userPassword, userAttributes: [email!], validationData: nil).continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
             
             if task.error != nil {
                 print(task.error!)
@@ -241,7 +245,7 @@ public class Pool {
                 
                 self.doSignUpSuccess(params: task)
                 
-                self.user = self.userPool().getUser(self.userEmail!)
+                self.user = self.userPool?.getUser(self.userEmail!)
             }
             
             return nil
