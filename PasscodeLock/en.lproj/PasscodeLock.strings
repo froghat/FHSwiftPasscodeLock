@@ -11,7 +11,7 @@
 "PasscodeLockEnterDescription" = "Enter your passcode to proceed.";
 
 /* Set Passcode State */
-"PasscodeLockSetTitle" = "Enter a Passcode";
+"PasscodeLockSetTitle" = "Set Passcode";
 "PasscodeLockSetDescription" = "Choose your passcode.";
 
 /* Confirm Passcode State */

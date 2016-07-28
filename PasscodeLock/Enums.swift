@@ -49,14 +49,14 @@ public func ==(lhs: AWSCodeType, rhs: AWSCodeType) -> Bool {
 }
 
 public enum FailureType: Int, CustomStringConvertible {
-    case unknown = 0, emailTaken, notConfirmed, wrongCredentials, incorrectPasscode
+    case unknown = 0, emailTaken, notConfirmed, invalidEmail, incorrectPasscode
     
     var TypeName: String {
         let typeNames = [
             "Unknown",
             "Email Taken",
             "User uncomfirmed",
-            "Wrong Credentials",
+            "Invalid Email",
             "Incorrect Passcode"]
         return typeNames[rawValue]
     }

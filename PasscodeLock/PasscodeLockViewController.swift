@@ -333,8 +333,8 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         else if failureType == .notConfirmed {
             notConfirmedAlert(lock: lock, priorAction: priorAction)
         }
-        else if failureType == .wrongCredentials {
-            
+        else if failureType == .invalidEmail {
+            invalidEmailAlert(lock: lock)
         }
         else {
             animateWrongPassword()
@@ -413,6 +413,23 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         }
         
         _ = alert.showNotice("Email Uncomfirmed", subTitle: "Please continue to email confirmation before attempting that task again.", closeButtonTitle: "Go Back", duration: 0)
+    }
+    
+    func invalidEmailAlert(lock: PasscodeLockType) {
+        let appearance = SCLAlertView.SCLAppearance(showCloseButton: false)
+        
+        let alert = SCLAlertView(appearance: appearance)
+        
+        
+        _ = alert.addButton("Sign Up Using That Email") {
+            self.switchToSetPasscodeState(lock: lock)
+        }
+        
+        _ = alert.addButton("Choose a Different Email") {
+            self.dismissPasscodeLock(lock: lock)
+        }
+        
+        _ = alert.showInfo("Invalid Email", subTitle: "Your email is not signed up.", duration: 0)
     }
     
     // MARK: - State Changing Methods

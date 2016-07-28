@@ -78,13 +78,17 @@ struct EnterPasscodeState: PasscodeLockStateType {
                 print("That is the wrong passcode. Literally go fuck yourself.")
                 lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .incorrectPasscode, priorAction: .unknown)
             }
+            else if task.error?.code == 12 {
+                print("This user is not signed up.")
+                lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .invalidEmail, priorAction: .unknown)
+            }
             else {
                 lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
             }
             
         }.onLogInSuccess {task in
             
-            let userDict: NSDictionary = ["hasLoggedIn": true, "email": Pool.sharedInstance.user!.username!, "password": userPassword]
+            let userDict: NSDictionary = ["hasLoggedIn": true, "email": Pool.sharedInstance.user!.username!]
             print(userDict)
             UserDefaults.standard.set(userDict, forKey: AWS_LOGIN_INFORMATION)
             
