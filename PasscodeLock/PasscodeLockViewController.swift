@@ -336,6 +336,9 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         else if failureType == .invalidEmail {
             invalidEmailAlert(lock: lock)
         }
+        else if failureType == .incorrectPasscode {
+            incorrectPasscodeAlert(lock: lock)
+        }
         else {
             animateWrongPassword()
         }
@@ -409,7 +412,9 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         let alert = SCLAlertView()
         
         _ = alert.addButton("Confirm Email") {
-            self.switchToAWSCodeState(lock: lock, codeType: .confirmation, priorAction: priorAction)
+            Pool.sharedInstance.user?.getAttributeVerificationCode("email")
+            
+            self.switchToAWSCodeState(lock: lock, codeType: .attributeVerification, priorAction: priorAction)
         }
         
         _ = alert.showNotice("Email Uncomfirmed", subTitle: "Please continue to email confirmation before attempting that task again.", closeButtonTitle: "Go Back", duration: 0)
@@ -430,6 +435,37 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         }
         
         _ = alert.showInfo("Invalid Email", subTitle: "Your email is not signed up.", duration: 0)
+    }
+    
+    func incorrectPasscodeAlert(lock: PasscodeLockType) {
+        let appearance = SCLAlertView.SCLAppearance(showCloseButton: false)
+        
+        let alert = SCLAlertView(appearance: appearance)
+        
+        _ = alert.addButton("Choose a New Passcode") {
+            print("Attempting to change a forgotten passcode.")
+            
+            Pool.sharedInstance.forgotPassword().onForgottenPasswordFailure {task in
+                
+                if task.error?.code == 7 {
+                    print("User must be confirmed to claim a forgotten password. Sort of ridiculous, but whatever.")
+                    
+                    self.passcodeLockDidFail(lock: lock, failureType: .notConfirmed, priorAction: .resetPassword)
+                }
+                else {
+                    self.passcodeLockDidFail(lock: lock, failureType: .unknown)
+                }
+                
+            }.onForgottenPasswordSuccess {task in
+                    self.switchToAWSCodeState(lock: lock, codeType: .forgottenPassword, priorAction: .logIn)
+            }
+        }
+        
+        _ = alert.addButton("Choose a Different Email") {
+            self.dismissPasscodeLock(lock: lock)
+        }
+        
+        _ = alert.showInfo("Incorrect Passcode", subTitle: "Your passcode did not match the one on record.", duration: 0)
     }
     
     // MARK: - State Changing Methods

@@ -24,8 +24,18 @@ struct AWSCodeState: PasscodeLockStateType {
         codeNeeded = codeType
         nextAction = priorAction
         
-        title = localizedStringFor(key: "PasscodeLockConfirmationTitle", comment: "Change passcode title")
-        description = localizedStringFor(key: "PasscodeLockConfirmationDescription", comment: "Change passcode description")
+        if codeType == .attributeVerification {
+            title = "Verify Email"
+            description = "Please enter the verification code sent to your registered email."
+        }
+        else if codeType == .confirmation {
+            title = "Confirm Email"
+            description = "Please enter the verification code sent to your registered email."
+        }
+        else {
+            title = "Enter Code to Reset Password"
+            description = "Please enter the verification code sent to your registered email."
+        }
     }
     
     func acceptPasscode(passcode: [String], fromLock lock: PasscodeLockType) {
@@ -40,7 +50,11 @@ struct AWSCodeState: PasscodeLockStateType {
             return str
         }
         
-        if codeNeeded == .confirmation {
+        
+        if codeNeeded == .attributeVerification {
+            verifyAWSAttribute(attribute: "email", code: confirmationString(), lock: lock)
+        }
+        else if codeNeeded == .confirmation {
             confirmAWSUser(confirmationString: confirmationString(), lock: lock)
         }
         else if codeNeeded == .forgottenPassword {
@@ -52,9 +66,37 @@ struct AWSCodeState: PasscodeLockStateType {
         
     }
     
+    func verifyAWSAttribute(attribute: String, code: String, lock: PasscodeLockType) {
+        Pool.sharedInstance.verifyUserAtrribute(attribute: attribute, code: code).onVerifyAttributeFailure {task in
+            DispatchQueue.main.async {
+                lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
+            }
+        }.onVerifyAttributeSuccess {task in
+            DispatchQueue.main.async {
+                print("nextAction == \(self.nextAction)")
+                
+                if self.nextAction == .resetPassword {
+                    Pool.sharedInstance.forgotPassword().onForgottenPasswordFailure {task in
+                        
+                        }.onForgottenPasswordSuccess {task in
+                            let nextState = AWSCodeState(codeType: .forgottenPassword)
+                            
+                            lock.changeStateTo(state: nextState)
+                    }
+                }
+                else if self.nextAction == .logIn {
+                    let nextState = EnterPasscodeState()
+                    
+                    lock.changeStateTo(state: nextState)
+                }
+                else {
+                    lock.delegate?.passcodeLockDidSucceed(lock: lock)
+                }
+            }
+        }
+    }
+    
     func confirmAWSUser(confirmationString: String, lock: PasscodeLockType) {
-        
-        Pool.sharedInstance.user?.resendConfirmationCode()
         
         Pool.sharedInstance.confirm(confirmationString: confirmationString).onConfirmationFailure {task in
             

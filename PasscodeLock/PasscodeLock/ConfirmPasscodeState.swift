@@ -67,7 +67,18 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
         }.onSignUpSuccess {task in
             
             DispatchQueue.main.async {
-                self.passcodeConfirmSucceeded(passcode: passcode, lock: lock)
+                
+                Pool.sharedInstance.logIn(userPassword: userPassword).onLogInFailure {task in
+                    
+                }.onLogInSuccess {task in
+                    
+                    Pool.sharedInstance.user?.getAttributeVerificationCode("email")
+                    
+                    lock.changeStateTo(state: AWSCodeState(codeType: .attributeVerification))
+                        
+                }
+                
+                //self.passcodeConfirmSucceeded(passcode: passcode, lock: lock)
             }
             
         }

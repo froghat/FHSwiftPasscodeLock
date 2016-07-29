@@ -29,11 +29,12 @@ public func ==(lhs: ActionAfterConfirmation, rhs: ActionAfterConfirmation) -> Bo
 }
 
 public enum AWSCodeType: Int, CustomStringConvertible {
-    case unknown = 0, confirmation, forgottenPassword
+    case unknown = 0, attributeVerification, confirmation, forgottenPassword
     
     var TypeName: String {
         let typeNames = [
             "Unknown",
+            "Verifying Attribute",
             "Confirmation Needed",
             "Password Forgotten"]
         return typeNames[rawValue]

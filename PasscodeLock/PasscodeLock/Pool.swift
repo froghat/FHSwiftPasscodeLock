@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import AWSCognito
 import AWSCognitoIdentityProvider
 
 let AWS_EMAIL_KEY = "awsEmailKey"
@@ -39,12 +40,34 @@ public class Pool {
     
     // Method to set the userPool in AppDelegate.
     
-    public func setUserPool(region: AWSRegionType, credentialsProvider: AWSCredentialsProvider?, clientID: String, clientSecret: String?, poolID: String) {
+    public func setUserPool(region: AWSRegionType, identityPoolID: String, credentialsProvider: AWSCredentialsProvider?, clientID: String, clientSecret: String?, poolID: String) {
+        let credentialsProvider = AWSCognitoCredentialsProvider(regionType: region, identityPoolId: identityPoolID)
         let serviceConfiguration = AWSServiceConfiguration(region: region, credentialsProvider: credentialsProvider)
+        AWSServiceManager.default().defaultServiceConfiguration = serviceConfiguration
+        
+        credentialsProvider.credentials().continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
+            if task.error != nil {
+                print(task.error)
+            }
+            else {
+                print(task.result)
+            }
+            
+            return nil
+        })
+        
         let userPoolConfiguration = AWSCognitoIdentityUserPoolConfiguration(clientId: clientID, clientSecret: clientSecret, poolId: poolID)
         AWSCognitoIdentityUserPool.register(with: serviceConfiguration, userPoolConfiguration: userPoolConfiguration, forKey: "UserPool")
         let pool = AWSCognitoIdentityUserPool(forKey: "UserPool")
         self.userPool = pool
+        
+//        let syncClient = AWSCognito.default()
+//        let dataset = syncClient?.openOrCreateDataset("myDataset")
+//        dataset?.setString("myValue", forKey: "myKey")
+//        dataset?.synchronize().continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
+//            //Your handler code here
+//            return nil
+//        })
     }
     
     // Type aliases for AWSCognitoIdentyProvider Tasks.
@@ -55,6 +78,7 @@ public class Pool {
     typealias ChangePasswordResponse = AWSTask<AWSCognitoIdentityUserChangePasswordResponse>
     typealias ForgottenPasswordResponse = AWSTask<AWSCognitoIdentityUserForgotPasswordResponse>
     typealias ForgottenPasswordConfirmationResponse = AWSTask<AWSCognitoIdentityUserConfirmForgotPasswordResponse>
+    typealias VerifyAttributeResponse = AWSTask<AWSCognitoIdentityUserVerifyAttributeResponse>
     
     // Type aliases, variables and functions handling sign ups.
     
@@ -224,6 +248,34 @@ public class Pool {
         }
     }
     
+    // Type aliases, variables and functions handling attribute verification.
+    
+    typealias VerifyAttributeConfirmationClosure = (VerifyAttributeResponse) -> Void
+    
+    var verifyAttributeSuccessClosure: ((VerifyAttributeResponse) -> ())? = nil
+    var verifyAttributeFailureClosure: ((VerifyAttributeResponse) -> ())? = nil
+    
+    func onVerifyAttributeSuccess(closure: (VerifyAttributeResponse) -> ()) {
+        verifyAttributeSuccessClosure = closure
+    }
+    
+    func onVerifyAttributeFailure(closure: (VerifyAttributeResponse) -> ()) -> Self {
+        verifyAttributeFailureClosure = closure
+        return self
+    }
+    
+    func doVerifyAttributeSuccess(params: VerifyAttributeResponse) {
+        if let closure = verifyAttributeSuccessClosure {
+            closure(params)
+        }
+    }
+    
+    func doVerifyAttributeFailure(params: VerifyAttributeResponse) {
+        if let closure = verifyAttributeFailureClosure {
+            closure(params)
+        }
+    }
+    
     // AWSCognitoIdentityProvider authentication methods.
     
     func signUp(userPassword: String) -> Self {
@@ -301,6 +353,7 @@ public class Pool {
     }
     
     func forgotPassword() -> Self {
+        print(user?.getDetails())
         
         user?.forgotPassword().continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
             if task.error != nil {
@@ -356,6 +409,27 @@ public class Pool {
                 print(task.result)
                 
                 self.doChangePasswordSuccess(params: task)
+            }
+            
+            return nil
+        })
+        
+        return self
+    }
+    
+    func verifyUserAtrribute(attribute: String, code: String) -> Self {
+        user?.verifyAttribute(attribute, code: code).continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
+            
+            if task.error != nil {
+                print(task.error!)
+                
+                self.doVerifyAttributeFailure(params: task)
+                
+            }
+            else {
+                print(task.result)
+                
+                self.doVerifyAttributeSuccess(params: task)
             }
             
             return nil
