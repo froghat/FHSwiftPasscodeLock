@@ -47,12 +47,14 @@ struct EnterPasscodeState: PasscodeLockStateType {
         }
         
         if Pool.sharedInstance.user != nil {
+            print("In the right closure.")
             logInAWSUser(userPassword: passcodeString, lock: lock)
         }
         else {
         
             if passcode == currentPasscode {
                 
+                print("In the wrong closure.")
                 lock.delegate?.passcodeLockDidSucceed(lock: lock)
                 
             }
@@ -95,6 +97,38 @@ struct EnterPasscodeState: PasscodeLockStateType {
                 UserDefaults.standard.set(userDict, forKey: AWS_LOGIN_INFORMATION)
                 
                 lock.delegate?.passcodeLockDidSucceed(lock: lock)
+                    
+            }
+        }
+        else {
+            lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .notConfirmed, priorAction: .logIn)
+        }
+    }
+    
+    func presenterLogIn(userPassword: String, lock: PasscodeLockType) {
+        if isEmailVerified() {
+            Pool.sharedInstance.logIn(userPassword: userPassword).onLogInFailure {task in
+                
+                if task.error?.code == 11 {
+                    print("That is the wrong passcode. Literally go fuck yourself.")
+                    lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .incorrectPasscode, priorAction: .unknown)
+                }
+                else if task.error?.code == 12 {
+                    print("This user is not signed up.")
+                    lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .invalidEmail, priorAction: .unknown)
+                }
+                else {
+                    lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
+                }
+                
+                }.onLogInSuccess {task in
+                    print("In login success")
+                    
+                    let userDict: NSDictionary = ["hasLoggedIn": true, "email": Pool.sharedInstance.user!.username!]
+                    print(userDict)
+                    UserDefaults.standard.set(userDict, forKey: AWS_LOGIN_INFORMATION)
+                    
+                    lock.delegate?.passcodeLockDidSucceed(lock: lock)
                     
             }
         }

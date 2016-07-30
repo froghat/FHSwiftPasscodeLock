@@ -67,7 +67,11 @@ public class PasscodeLockPresenter {
             
             userDismissCompletionCallback?()
             
-            self.dismissPasscodeLock()
+            Pool.sharedInstance.logIn(userPassword: lock.repository.getPasscode()).onLogInFailure {task in
+                
+            }.onLogInSuccess {task in
+                
+            }
         }
         
         passcodeLockVC.dismissCompletionCallback = {

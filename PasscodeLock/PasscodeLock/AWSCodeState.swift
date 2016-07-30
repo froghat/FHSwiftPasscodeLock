@@ -26,15 +26,15 @@ struct AWSCodeState: PasscodeLockStateType {
         
         if codeType == .attributeVerification {
             title = "Verify Email"
-            description = "Please enter the verification code sent to your registered email."
+            description = "Please enter the verification code in your email."
         }
         else if codeType == .confirmation {
             title = "Confirm Email"
-            description = "Please enter the verification code sent to your registered email."
+            description = "Please enter the verification code in your email."
         }
         else {
             title = "Enter Code to Reset Password"
-            description = "Please enter the verification code sent to your registered email."
+            description = "Please enter the verification code in your email."
         }
     }
     
