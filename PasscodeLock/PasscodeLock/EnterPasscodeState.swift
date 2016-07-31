@@ -7,6 +7,9 @@
 //
 
 import Foundation
+import AWSCognitoIdentityProvider
+
+let AWS_LOGIN_INFORMATION = "AWSLoginInformationKey"
 
 public let PasscodeLockIncorrectPasscodeNotification = "passcode.lock.incorrect.passcode.notification"
 
@@ -17,14 +20,14 @@ struct EnterPasscodeState: PasscodeLockStateType {
     let isCancellableAction: Bool
     var isTouchIDAllowed = true
     
-    private var inccorectPasscodeAttempts = 0
+    private var incorrectPasscodeAttempts = 0
     private var isNotificationSent = false
     
     init(allowCancellation: Bool = false) {
         
         isCancellableAction = allowCancellation
-        title = localizedStringFor("PasscodeLockEnterTitle", comment: "Enter passcode title")
-        description = localizedStringFor("PasscodeLockEnterDescription", comment: "Enter passcode description")
+        title = localizedStringFor(key: "PasscodeLockEnterTitle", comment: "Enter passcode title")
+        description = localizedStringFor(key: "PasscodeLockEnterDescription", comment: "Enter passcode description")
     }
     
     mutating func acceptPasscode(passcode: [String], fromLock lock: PasscodeLockType) {
@@ -33,31 +36,164 @@ struct EnterPasscodeState: PasscodeLockStateType {
             return
         }
         
-        if passcode == currentPasscode {
+        var passcodeString: String {
+            var str = ""
             
-            lock.delegate?.passcodeLockDidSucceed(lock)
-            
-        } else {
-            
-            inccorectPasscodeAttempts += 1
-            
-            if inccorectPasscodeAttempts >= lock.configuration.maximumInccorectPasscodeAttempts {
-                
-                postNotification()
+            for char in passcode {
+                str += char
             }
             
-            lock.delegate?.passcodeLockDidFail(lock)
+            return str
         }
+        
+        if Pool.sharedInstance.user != nil {
+            print("In the right closure.")
+            logInAWSUser(userPassword: passcodeString, lock: lock)
+        }
+        else {
+        
+            if passcode == currentPasscode {
+                
+                print("In the wrong closure.")
+                lock.delegate?.passcodeLockDidSucceed(lock: lock)
+                
+            }
+            else {
+                
+                lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
+            }
+        }
+    }
+    
+    mutating func registerIncorrectPasscode(lock: PasscodeLockType) -> Bool {
+        incorrectPasscodeAttempts += 1
+        
+        print("Incorrect passcode attempts: \(incorrectPasscodeAttempts)/\(lock.configuration.maximumInccorectPasscodeAttempts)")
+        
+        if incorrectPasscodeAttempts >= lock.configuration.maximumInccorectPasscodeAttempts {
+            
+            print("Trying to tell the user the passcode is incorrect.")
+            
+            postNotification()
+            
+            return true
+        }
+        
+        return false
+    }
+    
+    mutating func logInAWSUser(userPassword: String, lock: PasscodeLockType) {
+        
+        if isEmailVerified() {
+            Pool.sharedInstance.logIn(userPassword: userPassword).onLogInFailure {task in
+                
+                if task.error?.code == 11 {
+                    print("That is the wrong passcode. Literally go fuck yourself.")
+                    lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .incorrectPasscode, priorAction: .unknown)
+                }
+                else if task.error?.code == 12 {
+                    print("This user is not signed up.")
+                    lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .invalidEmail, priorAction: .unknown)
+                }
+                else {
+                    lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
+                }
+                
+            }.onLogInSuccess {task in
+                print("In login success")
+                
+                let userDict: NSDictionary = ["hasLoggedIn": true, "email": Pool.sharedInstance.user!.username!]
+                print(userDict)
+                UserDefaults.standard.set(userDict, forKey: AWS_LOGIN_INFORMATION)
+                
+                lock.delegate?.passcodeLockDidSucceed(lock: lock)
+                    
+            }
+        }
+        else {
+            lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .notConfirmed, priorAction: .logIn)
+        }
+    }
+    
+    func presenterLogIn(userPassword: String, lock: PasscodeLockType) {
+        if isEmailVerified() {
+            Pool.sharedInstance.logIn(userPassword: userPassword).onLogInFailure {task in
+                
+                if task.error?.code == 11 {
+                    print("That is the wrong passcode. Literally go fuck yourself.")
+                    lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .incorrectPasscode, priorAction: .unknown)
+                }
+                else if task.error?.code == 12 {
+                    print("This user is not signed up.")
+                    lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .invalidEmail, priorAction: .unknown)
+                }
+                else {
+                    lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
+                }
+                
+                }.onLogInSuccess {task in
+                    print("In login success")
+                    
+                    let userDict: NSDictionary = ["hasLoggedIn": true, "email": Pool.sharedInstance.user!.username!]
+                    print(userDict)
+                    UserDefaults.standard.set(userDict, forKey: AWS_LOGIN_INFORMATION)
+                    
+                    lock.delegate?.passcodeLockDidSucceed(lock: lock)
+                    
+            }
+        }
+        else {
+            lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .notConfirmed, priorAction: .logIn)
+        }
+    }
+    
+    func isEmailVerified() -> Bool {
+        var isVerified: Bool = false
+    
+        Pool.sharedInstance.user?.getDetails().continue(successBlock: {(task: AWSTask<AWSCognitoIdentityUserGetDetailsResponse>!) -> AnyObject! in
+            
+            if task.error != nil {
+                print(task.error)
+            }
+            else {
+                
+                if let resultDict = task.result {
+                    print("userDict: \(resultDict)")
+                    if let userDict: NSDictionary = resultDict.dictionaryWithValues(forKeys: ["userAttributes"]) as NSDictionary {
+                        if let userAttributesArray = userDict.value(forKey: "userAttributes") as? NSArray {
+                            print(userAttributesArray)
+                            for i in 0..<userAttributesArray.count {
+                                if let userAttribute = userAttributesArray[i] as? AWSCognitoIdentityProviderAttributeType {
+                                    if userAttribute.name == "email_verified" {
+                                        if userAttribute.value != nil {
+                                            if userAttribute.value! == "true" {
+                                                isVerified = true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            
+            return nil
+        }).waitUntilFinished()
+        
+        return isVerified
     }
     
     private mutating func postNotification() {
         
         guard !isNotificationSent else { return }
-            
-        let center = NSNotificationCenter.defaultCenter()
         
-        center.postNotificationName(PasscodeLockIncorrectPasscodeNotification, object: nil)
+        let center = NotificationCenter.default
+        
+        center.post(name: NSNotification.Name(rawValue: PasscodeLockIncorrectPasscodeNotification), object: nil)
         
         isNotificationSent = true
     }
+    
 }

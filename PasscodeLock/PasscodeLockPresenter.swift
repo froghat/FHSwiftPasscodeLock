@@ -14,7 +14,7 @@ public class PasscodeLockPresenter {
     
     private lazy var passcodeLockWindow: UIWindow = {
         
-        let window = UIWindow(frame: UIScreen.mainScreen().bounds)
+        let window = UIWindow(frame: UIScreen.main().bounds)
         
         window.windowLevel = 0
         window.makeKeyAndVisible()
@@ -42,7 +42,7 @@ public class PasscodeLockPresenter {
         self.init(mainWindow: window, configuration: configuration, viewController: passcodeLockVC)
     }
     
-    public func presentPasscodeLock() {
+    public func presentPasscodeLock(email: String, completion: (() -> Void)? = nil) {
         
         guard passcodeConfiguration.repository.hasPasscode else { return }
         guard !isPasscodePresented else { return }
@@ -50,25 +50,39 @@ public class PasscodeLockPresenter {
         isPasscodePresented = true
         
         passcodeLockWindow.windowLevel = 2
-        passcodeLockWindow.hidden = false
+        passcodeLockWindow.isHidden = false
         
         mainWindow?.windowLevel = 1
         mainWindow?.endEditing(true)
         
         let passcodeLockVC = PasscodeLockViewController(state: .EnterPasscode, configuration: passcodeConfiguration)
-        let userDismissCompletionCallback = passcodeLockVC.dismissCompletionCallback
+        passcodeLockVC.passedEmail = email
         
-        passcodeLockVC.dismissCompletionCallback = { [weak self] in
+        //let lock = passcodeLockVC.passcodeLock
+        
+        let userDismissCompletionCallback = completion
+
+        
+        passcodeLockVC.successCallback = {lock in
             
             userDismissCompletionCallback?()
             
-            self?.dismissPasscodeLock()
+            Pool.sharedInstance.logIn(userPassword: lock.repository.getPasscode()).onLogInFailure {task in
+                
+            }.onLogInSuccess {task in
+                
+            }
+        }
+        
+        passcodeLockVC.dismissCompletionCallback = {
+            self.dismissPasscodeLock()
+            
         }
         
         passcodeLockWindow.rootViewController = passcodeLockVC
     }
     
-    public func dismissPasscodeLock(animated animated: Bool = true) {
+    public func dismissPasscodeLock(animated: Bool = true) {
         
         isPasscodePresented = false
         mainWindow?.windowLevel = 1
@@ -87,12 +101,12 @@ public class PasscodeLockPresenter {
     
     internal func animatePasscodeLockDismissal() {
         
-        UIView.animateWithDuration(
-            0.5,
+        UIView.animate(
+            withDuration: 0.5,
             delay: 0,
             usingSpringWithDamping: 1,
             initialSpringVelocity: 0,
-            options: [.CurveEaseInOut],
+            options: [],
             animations: { [weak self] in
                 
                 self?.passcodeLockWindow.alpha = 0

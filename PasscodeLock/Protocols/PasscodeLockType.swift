@@ -13,7 +13,7 @@ public protocol PasscodeLockType {
     weak var delegate: PasscodeLockTypeDelegate? {get set}
     var configuration: PasscodeLockConfigurationType {get}
     var repository: PasscodeRepositoryType {get}
-    var state: PasscodeLockStateType {get}
+    var state: PasscodeLockStateType {get set}
     var isTouchIDAllowed: Bool {get}
     
     func addSign(sign: String)
@@ -25,7 +25,7 @@ public protocol PasscodeLockType {
 public protocol PasscodeLockTypeDelegate: class {
     
     func passcodeLockDidSucceed(lock: PasscodeLockType)
-    func passcodeLockDidFail(lock: PasscodeLockType)
+    func passcodeLockDidFail(lock: PasscodeLockType, failureType: FailureType, priorAction: ActionAfterConfirmation)
     func passcodeLockDidChangeState(lock: PasscodeLockType)
     func passcodeLock(lock: PasscodeLockType, addedSignAtIndex index: Int)
     func passcodeLock(lock: PasscodeLockType, removedSignAtIndex index: Int)

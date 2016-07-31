@@ -14,23 +14,32 @@ struct SetPasscodeState: PasscodeLockStateType {
     let description: String
     let isCancellableAction = true
     var isTouchIDAllowed = false
+    let changingPasscode: Bool
     
-    init(title: String, description: String) {
+    init(fromChange: Bool = false, title: String, description: String) {
+        
+        changingPasscode = fromChange
         
         self.title = title
         self.description = description
     }
     
-    init() {
+    
+    
+    init(fromChange: Bool = false) {
         
-        title = localizedStringFor("PasscodeLockSetTitle", comment: "Set passcode title")
-        description = localizedStringFor("PasscodeLockSetDescription", comment: "Set passcode description")
+        changingPasscode = fromChange
+        
+        title = localizedStringFor(key: "PasscodeLockSetTitle", comment: "Set passcode title")
+        description = localizedStringFor(key: "PasscodeLockSetDescription", comment: "Set passcode description")
     }
     
     func acceptPasscode(passcode: [String], fromLock lock: PasscodeLockType) {
         
-        let nextState = ConfirmPasscodeState(passcode: passcode)
+        let nextState = ConfirmPasscodeState(passcode: passcode, fromChange: changingPasscode)
         
-        lock.changeStateTo(nextState)
+        lock.changeStateTo(state: nextState)
     }
+    
+    mutating func registerIncorrectPasscode(lock: PasscodeLockType) -> Bool {return false} // Not needed for this state type
 }

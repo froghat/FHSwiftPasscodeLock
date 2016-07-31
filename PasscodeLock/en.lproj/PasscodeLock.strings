@@ -11,7 +11,7 @@
 "PasscodeLockEnterDescription" = "Enter your passcode to proceed.";
 
 /* Set Passcode State */
-"PasscodeLockSetTitle" = "Enter a Passcode";
+"PasscodeLockSetTitle" = "Set Passcode";
 "PasscodeLockSetDescription" = "Choose your passcode.";
 
 /* Confirm Passcode State */
@@ -21,6 +21,10 @@
 /* Change Passcode State */
 "PasscodeLockChangeTitle" = "Enter Old Passcode";
 "PasscodeLockChangeDescription" = "Enter your old passcode.";
+
+/* AWS Confirmation State */
+"PasscodeLockConfirmationTitle" = "Confirm Email";
+"PasscodeLockConfirmationDescription" = "Enter the confirmation code in your email.";
 
 /* Passcode Mismatch State */
 "PasscodeLockMismatchTitle" = "Try again";

@@ -15,4 +15,6 @@ public protocol PasscodeRepositoryType {
     
     func savePasscode(passcode: [String])
     func deletePasscode()
+    
+    func getPasscode() -> String
 }
