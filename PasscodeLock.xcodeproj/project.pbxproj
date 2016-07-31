@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		659503A2FFE20CB998F3936B /* Pods_FinGo_PasscodeLock.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4132DAD7920F2230E67022BC /* Pods_FinGo_PasscodeLock.framework */; };
 		8500E92F1D41866A00FF1983 /* Pool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8500E92E1D41866A00FF1983 /* Pool.swift */; };
 		8535924B1D3C367E00E31D9F /* PasscodeLockConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D3DF451B91BD0E008561EB /* PasscodeLockConfiguration.swift */; };
 		8535924C1D3C368200E31D9F /* UserDefaultsPasscodeRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D3DF431B91B9CD008561EB /* UserDefaultsPasscodeRepository.swift */; };
 		857F57001D18E4CB009936D8 /* AWSCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 857F56FF1D18E4CB009936D8 /* AWSCore.framework */; };
 		857FD51D1D42DCB9004A240B /* Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857FD51C1D42DCB9004A240B /* Enums.swift */; };
 		85CD59281D3C0A3F00C50044 /* AWSCodeState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85CD59271D3C0A3F00C50044 /* AWSCodeState.swift */; };
+		BAD8DE92DF9C2E97FB1B6C36 /* Pods_PasscodeLock.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A970980FC994ECB35DDEBCF4 /* Pods_PasscodeLock.framework */; };
 		C99EAF431B90B05700D61E1B /* PasscodeLock.h in Headers */ = {isa = PBXBuildFile; fileRef = C99EAF421B90B05700D61E1B /* PasscodeLock.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C99EAF4A1B90B05800D61E1B /* PasscodeLock.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C99EAF3F1B90B05700D61E1B /* PasscodeLock.framework */; };
 		C9D3DF0B1B919CE4008561EB /* PasscodeLockView.xib in Resources */ = {isa = PBXBuildFile; fileRef = C9D3DF0A1B919CE4008561EB /* PasscodeLockView.xib */; };
@@ -179,7 +179,7 @@
 			files = (
 				857F57001D18E4CB009936D8 /* AWSCore.framework in Frameworks */,
 				C9DC07E71B90C382007A4DD0 /* LocalAuthentication.framework in Frameworks */,
-				659503A2FFE20CB998F3936B /* Pods_FinGo_PasscodeLock.framework in Frameworks */,
+				BAD8DE92DF9C2E97FB1B6C36 /* Pods_PasscodeLock.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -693,7 +693,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/../Pods/Target Support Files/Pods-FinGo-PasscodeLock/Pods-FinGo-PasscodeLock-resources.sh\"\n";
+			shellScript = "\"${SRCROOT}/../Pods/Target Support Files/Pods-PasscodeLock/Pods-PasscodeLock-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		5B0E4839400F2DC2F4E97CB0 /* [CP] Embed Pods Frameworks */ = {
@@ -1026,7 +1026,7 @@
 		};
 		C99EAF541B90B05800D61E1B /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = F6F6173EFE24DD63F8893CC3 /* Pods-FinGo-PasscodeLock.debug.xcconfig */;
+			baseConfigurationReference = A3C7B8F9A317B79B55DBFC2D /* Pods-PasscodeLock.debug.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
@@ -1048,7 +1048,7 @@
 		};
 		C99EAF551B90B05800D61E1B /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 96B4532260EA0D4B86D224EA /* Pods-FinGo-PasscodeLock.release.xcconfig */;
+			baseConfigurationReference = AC343CCAA700FC21A174B38C /* Pods-PasscodeLock.release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;

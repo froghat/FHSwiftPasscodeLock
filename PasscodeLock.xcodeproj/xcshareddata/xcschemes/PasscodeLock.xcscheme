@@ -14,6 +14,20 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "83AF1E72C4B48C7B3304DDB4E286CFF7"
+               BuildableName = "Pods_PasscodeLock.framework"
+               BlueprintName = "Pods-PasscodeLock"
+               ReferencedContainer = "container:../Pods/Pods.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "C99EAF3E1B90B05700D61E1B"
                BuildableName = "PasscodeLock.framework"
                BlueprintName = "PasscodeLock"
