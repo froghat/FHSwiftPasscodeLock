@@ -49,6 +49,8 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
         }
     }
     
+    mutating func registerIncorrectPasscode(lock: PasscodeLockType) -> Bool {return false} // Not needed for this state type
+    
     func createAWSUser(userPassword: String, passcode: [String], lock: PasscodeLockType) {
         // AWS Send Email
         

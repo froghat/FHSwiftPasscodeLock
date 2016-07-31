@@ -38,4 +38,6 @@ struct ChangePasscodeState: PasscodeLockStateType {
             lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
         }
     }
+    
+    mutating func registerIncorrectPasscode(lock: PasscodeLockType) -> Bool {return false} // Not needed for this state type
 }

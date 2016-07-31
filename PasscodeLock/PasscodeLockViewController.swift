@@ -159,10 +159,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     
     private func setupEvents() {
         
-        // Causes a crash
         notificationCenter?.addObserver(self, selector: #selector(self.appWillEnterForegroundHandler(notification:)), name: NSNotification.Name.UIApplicationWillEnterForeground, object: nil)
-        
-        // Doesn't cause a crash
         notificationCenter?.addObserver(self, selector: #selector(self.appDidEnterBackgroundHandler(notification:)), name: NSNotification.Name.UIApplicationDidEnterBackground, object: nil)
     }
     
@@ -325,22 +322,36 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     
     public func passcodeLockDidFail(lock: PasscodeLockType, failureType: FailureType, priorAction: ActionAfterConfirmation = .unknown) {
         
-        if failureType == .emailTaken {
-            
-            emailTakenAlert(lock: lock)
-            
+        self.animateWrongPassword()
+        
+        var lock = lock
+        
+        var tooManyIncorrect = false
+        
+        if lock.state is EnterPasscodeState {
+            print("Registering incorrect passcode.")
+            tooManyIncorrect = lock.state.registerIncorrectPasscode(lock: lock)
         }
-        else if failureType == .notConfirmed {
-            notConfirmedAlert(lock: lock, priorAction: priorAction)
-        }
-        else if failureType == .invalidEmail {
-            invalidEmailAlert(lock: lock)
-        }
-        else if failureType == .incorrectPasscode {
-            incorrectPasscodeAlert(lock: lock)
-        }
-        else {
-            animateWrongPassword()
+        
+        
+        if !tooManyIncorrect {
+            if failureType == .emailTaken {
+                
+                emailTakenAlert(lock: lock)
+                
+            }
+            else if failureType == .notConfirmed {
+                notConfirmedAlert(lock: lock, priorAction: priorAction)
+            }
+            else if failureType == .invalidEmail {
+                invalidEmailAlert(lock: lock)
+            }
+            else if failureType == .incorrectPasscode {
+                incorrectPasscodeAlert(lock: lock)
+            }
+            else {
+                animateWrongPassword()
+            }
         }
     }
     
@@ -438,9 +449,8 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     }
     
     func incorrectPasscodeAlert(lock: PasscodeLockType) {
-        let appearance = SCLAlertView.SCLAppearance(showCloseButton: false)
         
-        let alert = SCLAlertView(appearance: appearance)
+        let alert = SCLAlertView()
         
         _ = alert.addButton("Choose a New Passcode") {
             print("Attempting to change a forgotten passcode.")
@@ -465,7 +475,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
             self.dismissPasscodeLock(lock: lock)
         }
         
-        _ = alert.showInfo("Incorrect Passcode", subTitle: "Your passcode did not match the one on record.", duration: 0)
+        _ = alert.showInfo("Incorrect Passcode", subTitle: "Your passcode did not match the one on record.", closeButtonTitle: "Try Again", duration: 0)
     }
     
     // MARK: - State Changing Methods

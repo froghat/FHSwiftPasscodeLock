@@ -20,7 +20,7 @@ struct EnterPasscodeState: PasscodeLockStateType {
     let isCancellableAction: Bool
     var isTouchIDAllowed = true
     
-    private var inccorectPasscodeAttempts = 0
+    private var incorrectPasscodeAttempts = 0
     private var isNotificationSent = false
     
     init(allowCancellation: Bool = false) {
@@ -60,19 +60,29 @@ struct EnterPasscodeState: PasscodeLockStateType {
             }
             else {
                 
-                inccorectPasscodeAttempts += 1
-                
-                if inccorectPasscodeAttempts >= lock.configuration.maximumInccorectPasscodeAttempts {
-                    
-                    postNotification()
-                }
-                
                 lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
             }
         }
     }
     
-    func logInAWSUser(userPassword: String, lock: PasscodeLockType) {
+    mutating func registerIncorrectPasscode(lock: PasscodeLockType) -> Bool {
+        incorrectPasscodeAttempts += 1
+        
+        print("Incorrect passcode attempts: \(incorrectPasscodeAttempts)/\(lock.configuration.maximumInccorectPasscodeAttempts)")
+        
+        if incorrectPasscodeAttempts >= lock.configuration.maximumInccorectPasscodeAttempts {
+            
+            print("Trying to tell the user the passcode is incorrect.")
+            
+            postNotification()
+            
+            return true
+        }
+        
+        return false
+    }
+    
+    mutating func logInAWSUser(userPassword: String, lock: PasscodeLockType) {
         
         if isEmailVerified() {
             Pool.sharedInstance.logIn(userPassword: userPassword).onLogInFailure {task in
@@ -178,7 +188,7 @@ struct EnterPasscodeState: PasscodeLockStateType {
     private mutating func postNotification() {
         
         guard !isNotificationSent else { return }
-            
+        
         let center = NotificationCenter.default
         
         center.post(name: NSNotification.Name(rawValue: PasscodeLockIncorrectPasscodeNotification), object: nil)

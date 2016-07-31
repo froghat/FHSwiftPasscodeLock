@@ -40,4 +40,6 @@ struct SetPasscodeState: PasscodeLockStateType {
         
         lock.changeStateTo(state: nextState)
     }
+    
+    mutating func registerIncorrectPasscode(lock: PasscodeLockType) -> Bool {return false} // Not needed for this state type
 }

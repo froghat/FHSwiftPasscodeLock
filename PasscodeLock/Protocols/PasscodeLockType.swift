@@ -13,7 +13,7 @@ public protocol PasscodeLockType {
     weak var delegate: PasscodeLockTypeDelegate? {get set}
     var configuration: PasscodeLockConfigurationType {get}
     var repository: PasscodeRepositoryType {get}
-    var state: PasscodeLockStateType {get}
+    var state: PasscodeLockStateType {get set}
     var isTouchIDAllowed: Bool {get}
     
     func addSign(sign: String)

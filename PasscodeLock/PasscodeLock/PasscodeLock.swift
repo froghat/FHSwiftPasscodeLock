@@ -18,9 +18,7 @@ public class PasscodeLock: PasscodeLockType {
         return configuration.repository
     }
     
-    public var state: PasscodeLockStateType {
-        return lockState
-    }
+    public var state: PasscodeLockStateType
     
     public var isTouchIDAllowed: Bool {
         return isTouchIDEnabled() && configuration.isTouchIDAllowed && lockState.isTouchIDAllowed
@@ -33,6 +31,7 @@ public class PasscodeLock: PasscodeLockType {
         
         precondition(configuration.passcodeLength > 0, "Passcode length sould be greather than zero.")
         
+        self.state = state
         self.lockState = state
         self.configuration = configuration
     }

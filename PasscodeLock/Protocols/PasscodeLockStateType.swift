@@ -16,4 +16,5 @@ public protocol PasscodeLockStateType {
     var isTouchIDAllowed: Bool {get}
     
     mutating func acceptPasscode(passcode: [String], fromLock lock: PasscodeLockType)
+    mutating func registerIncorrectPasscode(lock: PasscodeLockType) -> Bool // This is only necessary for EnterPasscodeState
 }

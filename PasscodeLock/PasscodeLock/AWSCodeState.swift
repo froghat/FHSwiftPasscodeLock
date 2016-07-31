@@ -66,6 +66,8 @@ struct AWSCodeState: PasscodeLockStateType {
         
     }
     
+    mutating func registerIncorrectPasscode(lock: PasscodeLockType) -> Bool {return false} // Not needed for this state type
+    
     func verifyAWSAttribute(attribute: String, code: String, lock: PasscodeLockType) {
         Pool.sharedInstance.verifyUserAtrribute(attribute: attribute, code: code).onVerifyAttributeFailure {task in
             DispatchQueue.main.async {
