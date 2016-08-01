@@ -24,6 +24,8 @@ struct AWSCodeState: PasscodeLockStateType {
         codeNeeded = codeType
         nextAction = priorAction
         
+        print("Initializing AWS code state of type \(codeNeeded).")
+        
         if codeType == .attributeVerification {
             title = "Verify Email"
             description = "Please enter the verification code in your email."

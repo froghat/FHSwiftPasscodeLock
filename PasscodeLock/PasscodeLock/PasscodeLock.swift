@@ -21,10 +21,9 @@ public class PasscodeLock: PasscodeLockType {
     public var state: PasscodeLockStateType
     
     public var isTouchIDAllowed: Bool {
-        return isTouchIDEnabled() && configuration.isTouchIDAllowed && lockState.isTouchIDAllowed
+        return isTouchIDEnabled() && configuration.isTouchIDAllowed && state.isTouchIDAllowed
     }
     
-    private var lockState: PasscodeLockStateType
     private lazy var passcode = [String]()
     
     public init(state: PasscodeLockStateType, configuration: PasscodeLockConfigurationType) {
@@ -32,7 +31,6 @@ public class PasscodeLock: PasscodeLockType {
         precondition(configuration.passcodeLength > 0, "Passcode length sould be greather than zero.")
         
         self.state = state
-        self.lockState = state
         self.configuration = configuration
     }
     
@@ -43,7 +41,7 @@ public class PasscodeLock: PasscodeLockType {
         
         if passcode.count >= configuration.passcodeLength {
             
-            lockState.acceptPasscode(passcode: passcode, fromLock: self)
+            state.acceptPasscode(passcode: passcode, fromLock: self)
             passcode.removeAll(keepingCapacity: true)
         }
     }
@@ -58,7 +56,7 @@ public class PasscodeLock: PasscodeLockType {
     
     public func changeStateTo(state: PasscodeLockStateType) {
         
-        lockState = state
+        self.state = state
         delegate?.passcodeLockDidChangeState(lock: self)
     }
     

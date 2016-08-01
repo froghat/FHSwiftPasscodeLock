@@ -32,7 +32,10 @@ struct EnterPasscodeState: PasscodeLockStateType {
     
     mutating func acceptPasscode(passcode: [String], fromLock lock: PasscodeLockType) {
         
+        print("Accept Passcode Lock in EnterPasscodeLock called.")
+        
         guard let currentPasscode = lock.repository.passcode else {
+            print("Returning early")
             return
         }
         
@@ -111,6 +114,7 @@ struct EnterPasscodeState: PasscodeLockStateType {
             }
         }
         else {
+            print("Email isn't verified.")
             lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .notConfirmed, priorAction: .logIn)
         }
     }
