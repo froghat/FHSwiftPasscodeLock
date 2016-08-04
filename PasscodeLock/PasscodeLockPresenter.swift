@@ -14,7 +14,7 @@ public class PasscodeLockPresenter {
     
     private lazy var passcodeLockWindow: UIWindow = {
         
-        let window = UIWindow(frame: UIScreen.main().bounds)
+        let window = UIWindow(frame: UIScreen.main.bounds)
         
         window.windowLevel = 0
         window.makeKeyAndVisible()

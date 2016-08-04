@@ -90,11 +90,11 @@ struct EnterPasscodeState: PasscodeLockStateType {
         if isEmailVerified() {
             Pool.sharedInstance.logIn(userPassword: userPassword).onLogInFailure {task in
                 
-                if task.error?.code == 11 {
+                if task.error?._code == 11 {
                     print("That is the wrong passcode. Literally go fuck yourself.")
                     lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .incorrectPasscode, priorAction: .unknown)
                 }
-                else if task.error?.code == 12 {
+                else if task.error?._code == 12 {
                     print("This user is not signed up.")
                     lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .invalidEmail, priorAction: .unknown)
                 }
@@ -123,11 +123,11 @@ struct EnterPasscodeState: PasscodeLockStateType {
         if isEmailVerified() {
             Pool.sharedInstance.logIn(userPassword: userPassword).onLogInFailure {task in
                 
-                if task.error?.code == 11 {
+                if task.error?._code == 11 {
                     print("That is the wrong passcode. Literally go fuck yourself.")
                     lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .incorrectPasscode, priorAction: .unknown)
                 }
-                else if task.error?.code == 12 {
+                else if task.error?._code == 12 {
                     print("This user is not signed up.")
                     lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .invalidEmail, priorAction: .unknown)
                 }

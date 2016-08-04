@@ -26,7 +26,7 @@ extension String {
         // print("validate calendar: \(testStr)")
         let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
         
-        let emailTest = Predicate(format:"SELF MATCHES %@", emailRegEx)
+        let emailTest = NSPredicate(format:"SELF MATCHES %@", emailRegEx)
         return emailTest.evaluate(with: self)
     }
     
@@ -257,7 +257,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         //authenticationInput has details about the last known username if you need to use it
     }
     
-    public func didCompleteStepWithError(_ error: NSError) {
+    public func didCompleteStepWithError(_ error: Error) {
         DispatchQueue.main.async {
             //self.dismissPasscodeLock(lock: self.passcodeLock)
         }
@@ -403,7 +403,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
             
             Pool.sharedInstance.forgotPassword().onForgottenPasswordFailure {task in
                 
-                if task.error?.code == 7 {
+                if task.error?._code == 7 {
                     print("User must be confirmed to claim a forgotten password. Sort of ridiculous, but whatever.")
                     self.passcodeLockDidFail(lock: lock, failureType: .notConfirmed, priorAction: .resetPassword)
                 }
@@ -457,7 +457,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
             
             Pool.sharedInstance.forgotPassword().onForgottenPasswordFailure {task in
                 
-                if task.error?.code == 7 {
+                if task.error?._code == 7 {
                     print("User must be confirmed to claim a forgotten password. Sort of ridiculous, but whatever.")
                     
                     self.passcodeLockDidFail(lock: lock, failureType: .notConfirmed, priorAction: .resetPassword)
@@ -515,7 +515,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         
     }
     
-    public func didCompleteMultifactorAuthenticationStepWithError(_ error: NSError) {
+    public func didCompleteMultifactorAuthenticationStepWithError(_ error: Error) {
         
     }
 }
