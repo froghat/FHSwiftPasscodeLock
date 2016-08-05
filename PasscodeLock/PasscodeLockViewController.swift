@@ -257,7 +257,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         //authenticationInput has details about the last known username if you need to use it
     }
     
-    public func didCompleteStepWithError(_ error: Error) {
+    public func didCompleteStepWithError(_ error: Error?) {
         DispatchQueue.main.async {
             //self.dismissPasscodeLock(lock: self.passcodeLock)
         }
@@ -515,7 +515,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         
     }
     
-    public func didCompleteMultifactorAuthenticationStepWithError(_ error: Error) {
+    public func didCompleteMultifactorAuthenticationStepWithError(_ error: Error?) {
         
     }
 }

@@ -309,7 +309,7 @@ public class Pool {
     // Log the user in.
     func logIn(userPassword: String) -> Self {
         
-        user?.getSession(userEmail!, password: userPassword, validationData: nil, scopes: nil).continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
+        user?.getSession(userEmail!, password: userPassword, validationData: nil).continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
             
             if task.error != nil {
                 print(task.error!)
