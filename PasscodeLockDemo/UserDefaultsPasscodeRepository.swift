@@ -7,9 +7,11 @@
 //
 
 import Foundation
+import JNKeychain
 
 class UserDefaultsPasscodeRepository: PasscodeRepositoryType {
     
+    private let usernameKey = "passcode.lock.username"
     private let passcodeKey = "passcode.lock.passcode"
     
     private lazy var defaults: UserDefaults = {
@@ -28,18 +30,35 @@ class UserDefaultsPasscodeRepository: PasscodeRepositoryType {
     
     var passcode: [String]? {
         
-        return defaults.value(forKey: passcodeKey) as? [String] ?? nil
+        //return defaults.value(forKey: passcodeKey) as? [String] ?? nil
+        return JNKeychain.loadValue(forKey: passcodeKey) as? [String] ?? nil
     }
     
     func savePasscode(passcode: [String]) {
         
-        defaults.set(passcode, forKey: passcodeKey)
+        print("Attempting to save passcode to keychain.")
+        print("Current value is \(JNKeychain.loadValue(forKey: passcodeKey))")
+        if JNKeychain.saveValue(passcode, forKey: passcodeKey) {
+            print ("Passcode \(passcode) saved for key \(passcodeKey).")
+        }
+        else {
+            print ("Passcode \(passcode) save failed for key \(passcodeKey). Shieeet")
+        }
+        
+        defaults.set(true, forKey: "hasLoginKey")
         defaults.synchronize()
     }
     
     func deletePasscode() {
         
-        defaults.removeObject(forKey: passcodeKey)
+        if JNKeychain.deleteValue(forKey: passcodeKey) {
+            print ("Passcode \(passcode) deleted for key \(passcodeKey).")
+        }
+        else {
+            print ("Passcode \(passcode) delete failed for key \(passcodeKey).")
+        }
+        
+        defaults.set(false, forKey: "hasLoginKey")
         defaults.synchronize()
     }
     

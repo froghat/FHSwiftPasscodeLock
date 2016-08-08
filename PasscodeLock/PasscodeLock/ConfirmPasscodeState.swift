@@ -58,7 +58,7 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
             
             DispatchQueue.main.async {
                 
-                if task.error?.code == 17 {
+                if task.error?._code == 17 {
                     self.passcodeConfirmFailed(passcode: passcode, lock: lock, failureType: .emailTaken, title: "Choose a different email.", description: "That email is already taken.")
                 }
                 else {
@@ -89,12 +89,12 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
     func changeAWSPassword(currentPassword: String, proposedPassword: String, passcode: [String], lock: PasscodeLockType) {
         
         Pool.sharedInstance.changePassword(currentPassword: currentPassword, proposedPassword: proposedPassword).onChangePasswordFailure {task in
-            if task.error?.code == 11 {
+            if task.error?._code == 11 {
                 
                 self.passcodeConfirmFailed(passcode: passcode, lock: lock, failureType: .notConfirmed)
                 
             } else {
-                print(task.error?.code)
+                print(task.error?._code)
                 self.passcodeConfirmFailed(passcode: passcode, lock: lock, failureType: .unknown)
                 
             }
