@@ -50,10 +50,10 @@ public class PasscodeSignButton: UIButton {
         setupActions()
     }
     
-//    public override func intrinsicContentSize() -> CGSize {
-//        
-//        return CGSize(width: 60, height: 60)
-//    }
+    public override var intrinsicContentSize: CGSize {
+        
+        return CGSize(width: 60, height: 60)
+    }
     
     private var defaultBackgroundColor = UIColor.clear
     
