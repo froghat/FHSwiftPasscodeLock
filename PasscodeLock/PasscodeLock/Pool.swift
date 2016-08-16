@@ -31,10 +31,17 @@ public class Pool {
     // Method to set the email when a PasscodeLock is created.
     
     public func setEmail(email: String) {
+        print("Setting email to \(email)")
+        
         userEmail = email
+        
+        print("Setting user to \(userPool?.getUser(email))")
+        
         user = userPool?.getUser(email)
         
         // Set the default email so a user can login from app opening.
+        print("Setting default email to \(email)")
+        
         UserDefaults.standard.set(email, forKey: AWS_EMAIL_KEY)
     }
     
@@ -44,6 +51,8 @@ public class Pool {
         let credentialsProvider = AWSCognitoCredentialsProvider(regionType: region, identityPoolId: identityPoolID)
         let serviceConfiguration = AWSServiceConfiguration(region: region, credentialsProvider: credentialsProvider)
         AWSServiceManager.default().defaultServiceConfiguration = serviceConfiguration
+        
+        
         
         credentialsProvider.credentials().continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
             if task.error != nil {
@@ -79,6 +88,7 @@ public class Pool {
     typealias ForgottenPasswordResponse = AWSTask<AWSCognitoIdentityUserForgotPasswordResponse>
     typealias ForgottenPasswordConfirmationResponse = AWSTask<AWSCognitoIdentityUserConfirmForgotPasswordResponse>
     typealias VerifyAttributeResponse = AWSTask<AWSCognitoIdentityUserVerifyAttributeResponse>
+    typealias UserDetailsResponse = AWSTask<AWSCognitoIdentityUserGetDetailsResponse>
     
     // Type aliases, variables and functions handling sign ups.
     
@@ -276,6 +286,34 @@ public class Pool {
         }
     }
     
+    // Type aliases, variables and functions handling user details responses.
+    
+    typealias UserDetailsClosure = (UserDetailsResponse) -> Void
+    
+    var userDetailsSuccessClosure: ((UserDetailsResponse) -> ())? = nil
+    var userDetailsFailureClosure: ((UserDetailsResponse) -> ())? = nil
+    
+    func onUserDetailsSuccess(closure: (UserDetailsResponse) -> ()) {
+        userDetailsSuccessClosure = closure
+    }
+    
+    func onUserDetailsFailure(closure: (UserDetailsResponse) -> ()) -> Self {
+        userDetailsFailureClosure = closure
+        return self
+    }
+    
+    func doUserDetailsSuccess(params: UserDetailsResponse) {
+        if let closure = userDetailsSuccessClosure {
+            closure(params)
+        }
+    }
+    
+    func doUserDetailsFailure(params: UserDetailsResponse) {
+        if let closure = userDetailsFailureClosure {
+            closure(params)
+        }
+    }
+    
     // AWSCognitoIdentityProvider authentication methods.
     
     func signUp(userPassword: String) -> Self {
@@ -430,6 +468,27 @@ public class Pool {
                 print(task.result)
                 
                 self.doVerifyAttributeSuccess(params: task)
+            }
+            
+            return nil
+        })
+        
+        return self
+    }
+    
+    func getUserDetails() -> Self {
+        user?.getDetails().continue(with: AWSExecutor.mainThread(), with: {(task: AWSTask!) -> AnyObject! in
+            
+            if task.error != nil {
+                print(task.error!)
+                
+                self.doUserDetailsFailure(params: task)
+                
+            }
+            else {
+                print(task.result)
+                
+                self.doUserDetailsSuccess(params: task)
             }
             
             return nil

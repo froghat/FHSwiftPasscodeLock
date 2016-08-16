@@ -34,9 +34,15 @@ struct EnterPasscodeState: PasscodeLockStateType {
         
         print("Accept Passcode Lock in EnterPasscodeLock called.")
         
-        guard let currentPasscode = lock.repository.passcode else {
-            print("Returning early")
-            return
+        var currentPasscode: [String]? = nil
+        
+        if lock.repository.passcode != nil {
+            currentPasscode = lock.repository.passcode
+        }
+        else {
+            lock.repository.savePasscode(passcode: passcode)
+            
+            currentPasscode = lock.repository.passcode
         }
         
         var passcodeString: String {
@@ -55,7 +61,7 @@ struct EnterPasscodeState: PasscodeLockStateType {
         }
         else {
         
-            if passcode == currentPasscode {
+            if passcode == currentPasscode! {
                 
                 print("In the wrong closure.")
                 lock.delegate?.passcodeLockDidSucceed(lock: lock)
@@ -87,54 +93,25 @@ struct EnterPasscodeState: PasscodeLockStateType {
     
     mutating func logInAWSUser(userPassword: String, lock: PasscodeLockType) {
         
-        if isEmailVerified() {
-            Pool.sharedInstance.logIn(userPassword: userPassword).onLogInFailure {task in
-                
-                if task.error?._code == 11 {
-                    print("That is the wrong passcode. Literally go fuck yourself.")
-                    lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .incorrectPasscode, priorAction: .unknown)
-                }
-                else if task.error?._code == 12 {
-                    print("This user is not signed up.")
-                    lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .invalidEmail, priorAction: .unknown)
-                }
-                else {
-                    lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
-                }
-                
-            }.onLogInSuccess {task in
-                print("In login success")
-                
-                let userDict: NSDictionary = ["hasLoggedIn": true, "email": Pool.sharedInstance.user!.username!]
-                print(userDict)
-                UserDefaults.standard.set(userDict, forKey: AWS_LOGIN_INFORMATION)
-                
-                lock.delegate?.passcodeLockDidSucceed(lock: lock)
+        print("In AWS login.")
+        
+       // isEmailVerified(callback: {(isEmailVerified: Bool) in
+        
+            if true {
+                Pool.sharedInstance.logIn(userPassword: userPassword).onLogInFailure {task in
                     
-            }
-        }
-        else {
-            print("Email isn't verified.")
-            lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .notConfirmed, priorAction: .logIn)
-        }
-    }
-    
-    func presenterLogIn(userPassword: String, lock: PasscodeLockType) {
-        if isEmailVerified() {
-            Pool.sharedInstance.logIn(userPassword: userPassword).onLogInFailure {task in
-                
-                if task.error?._code == 11 {
-                    print("That is the wrong passcode. Literally go fuck yourself.")
-                    lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .incorrectPasscode, priorAction: .unknown)
-                }
-                else if task.error?._code == 12 {
-                    print("This user is not signed up.")
-                    lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .invalidEmail, priorAction: .unknown)
-                }
-                else {
-                    lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
-                }
-                
+                    if task.error?._code == 11 {
+                        print("That is the wrong passcode. Literally go fuck yourself.")
+                        lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .incorrectPasscode, priorAction: .unknown)
+                    }
+                    else if task.error?._code == 12 {
+                        print("This user is not signed up.")
+                        lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .invalidEmail, priorAction: .unknown)
+                    }
+                    else {
+                        lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
+                    }
+                    
                 }.onLogInSuccess {task in
                     print("In login success")
                     
@@ -143,36 +120,79 @@ struct EnterPasscodeState: PasscodeLockStateType {
                     UserDefaults.standard.set(userDict, forKey: AWS_LOGIN_INFORMATION)
                     
                     lock.delegate?.passcodeLockDidSucceed(lock: lock)
-                    
-            }
-        }
-        else {
-            lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .notConfirmed, priorAction: .logIn)
-        }
-    }
-    
-    func isEmailVerified() -> Bool {
-        var isVerified: Bool = false
-    
-        Pool.sharedInstance.user?.getDetails().continue(successBlock: {(task: AWSTask<AWSCognitoIdentityUserGetDetailsResponse>!) -> AnyObject! in
-            
-            if task.error != nil {
-                print(task.error)
+                        
+                }
             }
             else {
-                
-                if let resultDict = task.result {
-                    print("userDict: \(resultDict)")
-                    if let userDict: NSDictionary = resultDict.dictionaryWithValues(forKeys: ["userAttributes"]) as NSDictionary {
-                        if let userAttributesArray = userDict.value(forKey: "userAttributes") as? NSArray {
-                            print(userAttributesArray)
-                            for i in 0..<userAttributesArray.count {
-                                if let userAttribute = userAttributesArray[i] as? AWSCognitoIdentityProviderAttributeType {
-                                    if userAttribute.name == "email_verified" {
-                                        if userAttribute.value != nil {
-                                            if userAttribute.value! == "true" {
-                                                isVerified = true
-                                            }
+                print("Email isn't verified.")
+                lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .notConfirmed, priorAction: .logIn)
+            }
+       // })
+    }
+    
+    func presenterLogIn(userPassword: String, lock: PasscodeLockType) {
+        
+        //isEmailVerified(callback: {(isEmailVerified: Bool) in
+            
+            if true {
+                Pool.sharedInstance.logIn(userPassword: userPassword).onLogInFailure {task in
+                    
+                    if task.error?._code == 11 {
+                        print("That is the wrong passcode. Literally go fuck yourself.")
+                        lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .incorrectPasscode, priorAction: .unknown)
+                    }
+                    else if task.error?._code == 12 {
+                        print("This user is not signed up.")
+                        lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .invalidEmail, priorAction: .unknown)
+                    }
+                    else {
+                        lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
+                    }
+                    
+                    }.onLogInSuccess {task in
+                        print("In login success")
+                        
+                        let userDict: NSDictionary = ["hasLoggedIn": true, "email": Pool.sharedInstance.user!.username!]
+                        print(userDict)
+                        UserDefaults.standard.set(userDict, forKey: AWS_LOGIN_INFORMATION)
+                        
+                        lock.delegate?.passcodeLockDidSucceed(lock: lock)
+                        
+                }
+            }
+            else {
+                lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .notConfirmed, priorAction: .logIn)
+            }
+        //})
+    }
+    
+    func isEmailVerified(callback: (Bool) -> Void) {
+        var isVerified: Bool = false
+    
+        print("In isEmailVerified()")
+        print(Pool.sharedInstance.user?.username)
+        print(Pool.sharedInstance.user!.getDetails())
+        print(Pool.sharedInstance.user!.getDetails().result)
+        
+        Pool.sharedInstance.getUserDetails().onUserDetailsFailure {task in
+            
+            print("Failed to retrieve user details")
+            
+        }.onUserDetailsSuccess {task in
+            
+            print("Successfully retrieved user details.")
+            
+            if let resultDict = task.result {
+                print("userDict: \(resultDict)")
+                if let userDict: NSDictionary = resultDict.dictionaryWithValues(forKeys: ["userAttributes"]) as NSDictionary {
+                    if let userAttributesArray = userDict.value(forKey: "userAttributes") as? NSArray {
+                        print(userAttributesArray)
+                        for i in 0..<userAttributesArray.count {
+                            if let userAttribute = userAttributesArray[i] as? AWSCognitoIdentityProviderAttributeType {
+                                if userAttribute.name == "email_verified" {
+                                    if userAttribute.value != nil {
+                                        if userAttribute.value! == "true" {
+                                            isVerified = true
                                         }
                                     }
                                 }
@@ -182,11 +202,10 @@ struct EnterPasscodeState: PasscodeLockStateType {
                 }
             }
             
-            
-            return nil
-        }).waitUntilFinished()
+            callback(isVerified)
+        }
         
-        return isVerified
+        print("After isEmailVerified()")
     }
     
     private mutating func postNotification() {

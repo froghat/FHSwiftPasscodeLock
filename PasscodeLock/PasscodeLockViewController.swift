@@ -135,6 +135,11 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         updatePasscodeView()
         deleteSignButton?.isEnabled = false
         
+        if passcodeConfiguration.isTouchIDAllowed == true {
+            self.viewIntroductionButton?.isHidden = false
+            self.touchIDButton?.isHidden = false
+        }
+        
         setupEvents()
     }
     
