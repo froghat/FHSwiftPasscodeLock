@@ -100,7 +100,7 @@ struct EnterPasscodeState: PasscodeLockStateType {
             if true {
                 Pool.sharedInstance.logIn(userPassword: userPassword).onLogInFailure {task in
                     
-                    if task.error?._code == 11 {
+                    if task.error?._code == 11 || task.error?._code == 16 {
                         print("That is the wrong passcode. Literally go fuck yourself.")
                         lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .incorrectPasscode, priorAction: .unknown)
                     }
@@ -137,7 +137,7 @@ struct EnterPasscodeState: PasscodeLockStateType {
             if true {
                 Pool.sharedInstance.logIn(userPassword: userPassword).onLogInFailure {task in
                     
-                    if task.error?._code == 11 {
+                    if task.error?._code == 11 || task.error?._code == 16 {
                         print("That is the wrong passcode. Literally go fuck yourself.")
                         lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .incorrectPasscode, priorAction: .unknown)
                     }
@@ -166,7 +166,7 @@ struct EnterPasscodeState: PasscodeLockStateType {
         //})
     }
     
-    func isEmailVerified(callback: (Bool) -> Void) {
+    func isEmailVerified(callback: @escaping (Bool) -> Void) {
         var isVerified: Bool = false
     
         print("In isEmailVerified()")

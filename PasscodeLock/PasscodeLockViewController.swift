@@ -11,6 +11,8 @@ import AWSCore
 import AWSCognitoIdentityProvider
 import SCLAlertView
 
+let EMAIL_KEY = "emailViewControllerTextFieldKey"
+
 extension String {
     
     //To check text field or String is blank or not
@@ -28,20 +30,6 @@ extension String {
         
         let emailTest = NSPredicate(format:"SELF MATCHES %@", emailRegEx)
         return emailTest.evaluate(with: self)
-    }
-    
-    //validate PhoneNumber
-    var isPhoneNumber: Bool {
-        
-        let charcter = NSCharacterSet(charactersIn: "+0123456789").inverted
-        
-        var filtered:NSString!
-        
-        let inputString: NSArray = self.components(separatedBy: charcter)
-        
-        filtered = inputString.componentsJoined(by: "")
-        return  self == filtered
-        
     }
 }
 
@@ -77,7 +65,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     @IBOutlet public weak var viewIntroductionButton: UIButton?
     @IBOutlet public weak var placeholdersX: NSLayoutConstraint?
     
-    public var successCallback: ((lock: PasscodeLockType) -> Void)?
+    public var successCallback: ((_ lock: PasscodeLockType) -> Void)?
     public var dismissCompletionCallback: (()->Void)?
     public var animateOnDismiss: Bool
     public var notificationCenter: NotificationCenter?
@@ -321,7 +309,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         animatePlaceholders(placeholders: placeholders, toState: .Inactive)
         dismissPasscodeLock(lock: lock) {
             print("Calling success callback")
-            self.successCallback?(lock: lock)
+            self.successCallback?(lock)
         }
     }
     
@@ -395,6 +383,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
         
         let newEmailButton = alert.addButton("Try Again With New Email") {
             Pool.sharedInstance.setEmail(email: txt.text!)
+            UserDefaults.standard.set(txt.text!, forKey: EMAIL_KEY)
             self.switchToSetPasscodeState(lock: lock)
         }
         

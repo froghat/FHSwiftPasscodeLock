@@ -58,10 +58,14 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
             
             DispatchQueue.main.async {
                 
-                if task.error?._code == 17 {
+                if task.error?._code == 17 || task.error?._code == 25 {
+                    print("User's requested email is already taken.")
+                    
                     self.passcodeConfirmFailed(passcode: passcode, lock: lock, failureType: .emailTaken, title: "Choose a different email.", description: "That email is already taken.")
                 }
                 else {
+                    print("Sign up failed for unknown reason.")
+                    
                     self.passcodeConfirmFailed(passcode: passcode, lock: lock, failureType: .unknown)
                 }
             }
