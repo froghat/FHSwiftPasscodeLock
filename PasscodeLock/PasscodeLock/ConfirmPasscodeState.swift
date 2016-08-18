@@ -8,6 +8,8 @@
 
 import Foundation
 import AWSCognitoIdentityProvider
+import SCLAlertView
+
 
 struct ConfirmPasscodeState: PasscodeLockStateType {
     
@@ -19,6 +21,8 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
     
     private var passcodeToConfirm: [String]
     
+    private var alert: SCLAlertViewResponder?
+    
     init(passcode: [String], fromChange: Bool = false) {
         passcodeToConfirm = passcode
         changingPasscode = fromChange
@@ -27,7 +31,9 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
         description = localizedStringFor(key: "PasscodeLockConfirmDescription", comment: "Confirm passcode description")
     }
     
-    func acceptPasscode(passcode: [String], fromLock lock: PasscodeLockType) {
+    mutating func acceptPasscode(passcode: [String], fromLock lock: PasscodeLockType) {
+        
+        alert = presentWaitingAlert()
         
         if passcode == passcodeToConfirm {
             
@@ -68,6 +74,8 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
                     
                     self.passcodeConfirmFailed(passcode: passcode, lock: lock, failureType: .unknown)
                 }
+                
+                self.finishWaitingAlert(alert: self.alert!)
             }
             
         }.onSignUpSuccess {task in
@@ -76,15 +84,17 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
                 
                 Pool.sharedInstance.logIn(userPassword: userPassword).onLogInFailure {task in
                     
+                    self.finishWaitingAlert(alert: self.alert!)
+                    
                 }.onLogInSuccess {task in
                     
                     Pool.sharedInstance.user?.getAttributeVerificationCode("email")
                     
                     lock.changeStateTo(state: AWSCodeState(codeType: .attributeVerification))
+                    
+                    self.finishWaitingAlert(alert: self.alert!)
                         
                 }
-                
-                //self.passcodeConfirmSucceeded(passcode: passcode, lock: lock)
             }
             
         }
@@ -103,13 +113,19 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
                 
             }
             
+            self.finishWaitingAlert(alert: self.alert!)
+            
         }.onChangePasswordSuccess {task in
             DispatchQueue.main.async {
                 self.passcodeConfirmSucceeded(passcode: passcode, lock: lock)
                 
                 Pool.sharedInstance.logIn(userPassword: proposedPassword).onLogInFailure {task in
                     
+                    self.finishWaitingAlert(alert: self.alert!)
+                    
                 }.onLogInSuccess {task in
+                    
+                    self.finishWaitingAlert(alert: self.alert!)
                         
                 }
             }
@@ -157,5 +173,19 @@ struct ConfirmPasscodeState: PasscodeLockStateType {
         }
         
         return passcode
+    }
+    
+    //MARK: - SCL Alert View Methods
+    
+    public func presentWaitingAlert() -> SCLAlertViewResponder {
+        let appearance = SCLAlertView.SCLAppearance(showCloseButton: false)
+        
+        let responder: SCLAlertViewResponder = SCLAlertView(appearance: appearance).showWait("Waiting for response", subTitle: "Please wait for a sign up response from the server.")
+        
+        return responder
+    }
+    
+    public func finishWaitingAlert(alert: SCLAlertViewResponder) {
+        alert.close()
     }
 }

@@ -8,6 +8,7 @@
 
 import Foundation
 import AWSCognitoIdentityProvider
+import SCLAlertView
 
 struct AWSCodeState: PasscodeLockStateType {
     
@@ -18,6 +19,8 @@ struct AWSCodeState: PasscodeLockStateType {
     
     private var codeNeeded: AWSCodeType
     private var nextAction: ActionAfterConfirmation
+    
+    private var alert: SCLAlertViewResponder?
     
     init(codeType: AWSCodeType, priorAction: ActionAfterConfirmation = .unknown) {
         
@@ -40,7 +43,9 @@ struct AWSCodeState: PasscodeLockStateType {
         }
     }
     
-    func acceptPasscode(passcode: [String], fromLock lock: PasscodeLockType) {
+    mutating func acceptPasscode(passcode: [String], fromLock lock: PasscodeLockType) {
+        
+        alert = presentWaitingAlert()
         
         let confirmationString: () -> String = {
             var str = ""
@@ -74,6 +79,8 @@ struct AWSCodeState: PasscodeLockStateType {
         Pool.sharedInstance.verifyUserAtrribute(attribute: attribute, code: code).onVerifyAttributeFailure {task in
             DispatchQueue.main.async {
                 lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
+                
+                self.finishWaitingAlert(alert: self.alert!)
             }
         }.onVerifyAttributeSuccess {task in
             DispatchQueue.main.async {
@@ -82,19 +89,27 @@ struct AWSCodeState: PasscodeLockStateType {
                 if self.nextAction == .resetPassword {
                     Pool.sharedInstance.forgotPassword().onForgottenPasswordFailure {task in
                         
-                        }.onForgottenPasswordSuccess {task in
-                            let nextState = AWSCodeState(codeType: .forgottenPassword)
+                        self.finishWaitingAlert(alert: self.alert!)
+                        
+                    }.onForgottenPasswordSuccess {task in
+                        let nextState = AWSCodeState(codeType: .forgottenPassword)
                             
-                            lock.changeStateTo(state: nextState)
+                        lock.changeStateTo(state: nextState)
+                        
+                        self.finishWaitingAlert(alert: self.alert!)
                     }
                 }
                 else if self.nextAction == .logIn {
                     let nextState = EnterPasscodeState()
                     
                     lock.changeStateTo(state: nextState)
+                    
+                    self.finishWaitingAlert(alert: self.alert!)
                 }
                 else {
                     lock.delegate?.passcodeLockDidSucceed(lock: lock)
+                    
+                    self.finishWaitingAlert(alert: self.alert!)
                 }
             }
         }
@@ -106,6 +121,8 @@ struct AWSCodeState: PasscodeLockStateType {
             
             DispatchQueue.main.async {
                 lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
+                
+                self.finishWaitingAlert(alert: self.alert!)
             }
             
         }.onConfirmationSuccess {task in
@@ -116,19 +133,27 @@ struct AWSCodeState: PasscodeLockStateType {
                 if self.nextAction == .resetPassword {
                     Pool.sharedInstance.forgotPassword().onForgottenPasswordFailure {task in
                         
+                        self.finishWaitingAlert(alert: self.alert!)
+                        
                     }.onForgottenPasswordSuccess {task in
                         let nextState = AWSCodeState(codeType: .forgottenPassword)
                         
                         lock.changeStateTo(state: nextState)
+                        
+                        self.finishWaitingAlert(alert: self.alert!)
                     }
                 }
                 else if self.nextAction == .logIn {
                     let nextState = EnterPasscodeState()
 
                     lock.changeStateTo(state: nextState)
+                    
+                    self.finishWaitingAlert(alert: self.alert!)
                 }
                 else {
                     lock.delegate?.passcodeLockDidSucceed(lock: lock)
+                    
+                    self.finishWaitingAlert(alert: self.alert!)
                 }
             }
             
@@ -141,6 +166,8 @@ struct AWSCodeState: PasscodeLockStateType {
             
             DispatchQueue.main.async {
                 lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: self.nextAction)
+                
+                self.finishWaitingAlert(alert: self.alert!)
             }
             
         }.onForgottenPasswordConfirmationSuccess {task in
@@ -149,8 +176,24 @@ struct AWSCodeState: PasscodeLockStateType {
                 let nextState = SetPasscodeState(fromChange: true)
                     
                 lock.changeStateTo(state: nextState)
+                
+                self.finishWaitingAlert(alert: self.alert!)
             }
                 
         }
+    }
+    
+    //MARK: - SCL Alert View Methods
+    
+    public func presentWaitingAlert() -> SCLAlertViewResponder {
+        let appearance = SCLAlertView.SCLAppearance(showCloseButton: false)
+        
+        let responder: SCLAlertViewResponder = SCLAlertView(appearance: appearance).showWait("Waiting for response", subTitle: "Please wait for a confirmation response from the server.")
+        
+        return responder
+    }
+    
+    public func finishWaitingAlert(alert: SCLAlertViewResponder) {
+        alert.close()
     }
 }

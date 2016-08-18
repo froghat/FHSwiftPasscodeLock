@@ -8,6 +8,7 @@
 
 import Foundation
 import AWSCognitoIdentityProvider
+import SCLAlertView
 
 let AWS_LOGIN_INFORMATION = "AWSLoginInformationKey"
 
@@ -23,6 +24,8 @@ struct EnterPasscodeState: PasscodeLockStateType {
     private var incorrectPasscodeAttempts = 0
     private var isNotificationSent = false
     
+    private var alert: SCLAlertViewResponder?
+    
     init(allowCancellation: Bool = false) {
         
         isCancellableAction = allowCancellation
@@ -33,6 +36,8 @@ struct EnterPasscodeState: PasscodeLockStateType {
     mutating func acceptPasscode(passcode: [String], fromLock lock: PasscodeLockType) {
         
         print("Accept Passcode Lock in EnterPasscodeLock called.")
+        
+        alert = presentWaitingAlert()
         
         var currentPasscode: [String]? = nil
         
@@ -91,7 +96,7 @@ struct EnterPasscodeState: PasscodeLockStateType {
         return false
     }
     
-    mutating func logInAWSUser(userPassword: String, lock: PasscodeLockType) {
+    func logInAWSUser(userPassword: String, lock: PasscodeLockType) {
         
         print("In AWS login.")
         
@@ -112,6 +117,8 @@ struct EnterPasscodeState: PasscodeLockStateType {
                         lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
                     }
                     
+                    self.finishWaitingAlert(alert: self.alert!)
+                    
                 }.onLogInSuccess {task in
                     print("In login success")
                     
@@ -120,6 +127,8 @@ struct EnterPasscodeState: PasscodeLockStateType {
                     UserDefaults.standard.set(userDict, forKey: AWS_LOGIN_INFORMATION)
                     
                     lock.delegate?.passcodeLockDidSucceed(lock: lock)
+                    
+                    self.finishWaitingAlert(alert: self.alert!)
                         
                 }
             }
@@ -149,6 +158,8 @@ struct EnterPasscodeState: PasscodeLockStateType {
                         lock.delegate?.passcodeLockDidFail(lock: lock, failureType: .unknown, priorAction: .unknown)
                     }
                     
+                    self.finishWaitingAlert(alert: self.alert!)
+                    
                     }.onLogInSuccess {task in
                         print("In login success")
                         
@@ -158,6 +169,7 @@ struct EnterPasscodeState: PasscodeLockStateType {
                         
                         lock.delegate?.passcodeLockDidSucceed(lock: lock)
                         
+                        self.finishWaitingAlert(alert: self.alert!)
                 }
             }
             else {
@@ -217,6 +229,20 @@ struct EnterPasscodeState: PasscodeLockStateType {
         center.post(name: NSNotification.Name(rawValue: PasscodeLockIncorrectPasscodeNotification), object: nil)
         
         isNotificationSent = true
+    }
+    
+    //MARK: - SCL Alert View Methods
+    
+    public func presentWaitingAlert() -> SCLAlertViewResponder {
+        let appearance = SCLAlertView.SCLAppearance(showCloseButton: false)
+        
+        let responder: SCLAlertViewResponder = SCLAlertView(appearance: appearance).showWait("Waiting for response", subTitle: "Please wait for a login response from the server.")
+        
+        return responder
+    }
+    
+    public func finishWaitingAlert(alert: SCLAlertViewResponder) {
+        alert.close()
     }
     
 }
