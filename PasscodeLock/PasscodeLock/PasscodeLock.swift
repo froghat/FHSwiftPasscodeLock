@@ -8,6 +8,7 @@
 
 import Foundation
 import LocalAuthentication
+import SCLAlertView
 
 public class PasscodeLock: PasscodeLockType {
     
@@ -41,7 +42,12 @@ public class PasscodeLock: PasscodeLockType {
         
         if passcode.count >= configuration.passcodeLength {
             
+            //let alert = self.presentWaitingAlert()
+            
             state.acceptPasscode(passcode: passcode, fromLock: self)
+            
+            //self.finishWaitingAlert(alert: alert)
+            
             passcode.removeAll(keepingCapacity: true)
         }
     }
