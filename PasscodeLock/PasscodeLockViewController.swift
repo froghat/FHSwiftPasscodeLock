@@ -63,6 +63,7 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     @IBOutlet public weak var deleteSignButton: UIButton?
     @IBOutlet public weak var touchIDButton: UIButton?
     @IBOutlet public weak var viewIntroductionButton: UIButton?
+    @IBOutlet public weak var forgotPINButton: UIButton?
     @IBOutlet public weak var placeholdersX: NSLayoutConstraint?
     
     public var successCallback: ((_ lock: PasscodeLockType) -> Void)?
@@ -198,6 +199,34 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     @IBAction func viewIntroductionButtonTap(_ sender: UIButton) {
         
         self.dismissPasscodeLock(lock: passcodeLock)
+    }
+    
+    @IBAction func forgotPINButtonTap(_ sender: UIButton) {
+        print("Attempting to change a forgotten passcode.")
+        
+        let appearance = SCLAlertView.SCLAppearance(showCloseButton: false)
+        
+        let responder: SCLAlertViewResponder = SCLAlertView(appearance: appearance).showWait("Waiting for response", subTitle: "Please wait for a confirmaton response from the server.")
+        
+        Pool.sharedInstance.forgotPassword().onForgottenPasswordFailure {task in
+            
+            if task.error?._code == 7 {
+                print("User must be confirmed to claim a forgotten password. Sort of ridiculous, but whatever.")
+                
+                self.passcodeLockDidFail(lock: self.passcodeLock, failureType: .notConfirmed, priorAction: .resetPassword)
+            }
+            else {
+                self.passcodeLockDidFail(lock: self.passcodeLock, failureType: .unknown)
+            }
+            
+            responder.close()
+            
+            }.onForgottenPasswordSuccess {task in
+                self.switchToAWSCodeState(lock: self.passcodeLock, codeType: .forgottenPassword, priorAction: .logIn)
+                
+                responder.close()
+        }
+        
     }
     
     private func authenticateWithBiometrics() {
@@ -444,28 +473,19 @@ public class PasscodeLockViewController: UIViewController, PasscodeLockTypeDeleg
     
     func incorrectPasscodeAlert(lock: PasscodeLockType) {
         
-        let alert = SCLAlertView()
+        let appearance = SCLAlertView.SCLAppearance(
+            showCloseButton: false
+        )
         
-        _ = alert.addButton("Choose a New Passcode") {
-            print("Attempting to change a forgotten passcode.")
+        let alert = SCLAlertView(appearance: appearance)
+        
+        _ = alert.addButton("Try a different passcode.") {}
+        
+        _ = alert.addButton("Reset your passcode.") {
             
-            Pool.sharedInstance.forgotPassword().onForgottenPasswordFailure {task in
-                
-                if task.error?._code == 7 {
-                    print("User must be confirmed to claim a forgotten password. Sort of ridiculous, but whatever.")
-                    
-                    self.passcodeLockDidFail(lock: lock, failureType: .notConfirmed, priorAction: .resetPassword)
-                }
-                else {
-                    self.passcodeLockDidFail(lock: lock, failureType: .unknown)
-                }
-                
-            }.onForgottenPasswordSuccess {task in
-                    self.switchToAWSCodeState(lock: lock, codeType: .forgottenPassword, priorAction: .logIn)
-            }
         }
         
-        _ = alert.addButton("Choose a Different Email") {
+        _ = alert.addButton("Try a Different Email") {
             self.dismissPasscodeLock(lock: lock)
         }
         
